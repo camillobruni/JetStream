@@ -394,7 +394,7 @@ class Driver {
         let text = "";
         let newBenchmarks = [];
         for (const benchmark of this.benchmarks) {
-            const description = Array.from(Object.keys(benchmark.subScores())) 
+            const description = Object.keys(benchmark.subScores())
             description.push("Score")
 
             newBenchmarks.push(benchmark);
