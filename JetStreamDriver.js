@@ -394,11 +394,11 @@ class Driver {
         let text = "";
         let newBenchmarks = [];
         for (const benchmark of this.benchmarks) {
-            const description = Object.keys(benchmark.subScores())
-            description.push("Score")
+            const description = Object.keys(benchmark.subScores());
+            description.push("Score");
 
             newBenchmarks.push(benchmark);
-            const scoreIds = benchmark.scoreIdentifiers()
+            const scoreIds = benchmark.scoreIdentifiers();
             const overallScoreId = scoreIds.pop();
 
             if (isInBrowser) {
