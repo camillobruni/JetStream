@@ -1839,6 +1839,16 @@ let BENCHMARKS = [
         worstCaseCount: 16,
         tags: ["BigIntMisc"],
     }),
+    new DefaultBenchmark({
+        name: "jsdom",
+        files: [
+            "./jsdom/dist/jsdom.js",
+            "./jsdom/benchmark.js",
+        ],
+        iterations: 10,
+        worstCaseCount: 4,
+        tags: ["jsdom"],
+    }),
     // Proxy
     new AsyncBenchmark({
         name: "proxy-mobx",
