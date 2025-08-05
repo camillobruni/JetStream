@@ -270,4 +270,5 @@ function runTagcloud() {
         throw "ERROR: bad result: expected length at least " + expectedMinLength + " but got " + tagcloud.length;
 
     tagInfo = null;
+    return tagcloud.length;
 }

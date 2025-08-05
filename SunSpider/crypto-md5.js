@@ -289,6 +289,6 @@ Once more, on pain of death, all men depart.";
 
     if (md5Output != expected)
         throw "ERROR: bad result: expected " + expected + " but got " + md5Output;
-
+    return md5Output;
 }
 

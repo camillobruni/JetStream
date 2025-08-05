@@ -79,5 +79,6 @@ result += decompressedPrototype.length;
 var expected = 511508;
 if (result != expected)
     throw "ERROR: bad result: expected " + expected + " but got " + result;
+return result;
 
 }

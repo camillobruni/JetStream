@@ -172,4 +172,5 @@ function runNBody() {
     var expected = -1.3524862408537381;
     if (ret != expected)
         throw "ERROR: bad result: expected " + expected + " but got " + ret;
+   return ret;
 }

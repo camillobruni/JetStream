@@ -424,6 +424,7 @@ And sails upon the bosom of the air.";
 
     if (decryptedText != plainText)
         throw "ERROR: bad result: expected " + plainText + " but got " + decryptedText;
+    return decryptedText.length;
 }
 
 

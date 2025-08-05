@@ -226,4 +226,5 @@ What here shall miss, our toil shall strive to mend.";
     var expected = "2524d264def74cce2498bf112bedf00e6c0b796d";
     if (sha1Output != expected)
         throw "ERROR: bad result: expected " + expected + " but got " + sha1Output;
+    return sha1Output;
 }

@@ -445,4 +445,5 @@ function run3dRayTrace() {
 
     if (testOutput.length != expectedLength)
         throw "Error: bad result: expected length " + expectedLength + " but got " + testOutput.length;
+    return testOutput.length;
 }

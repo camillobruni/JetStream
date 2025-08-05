@@ -134,5 +134,6 @@ function runBase64() {
         // Double the string
         str += str;
     }
+    return str.length;
 }
 

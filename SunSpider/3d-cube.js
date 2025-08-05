@@ -340,10 +340,11 @@ function run3dCube() {
       }
       if (sum != validation[CubeSize])
         throw "Error: bad vector sum for CubeSize = " + CubeSize + "; expected " + validation[CubeSize] + " but got " + sum;
+      return sum;
     }
-
+    let result = 0xdeadbeef;
     for ( var i = 20; i <= 160; i *= 2 ) {
-      Init(i);
+      result ^= Init(i);
     }
 
     Q = null;
@@ -354,4 +355,5 @@ function run3dCube() {
     Testing = null;
     LoopTime = null;
     DisplArea = null;
+    return result;
 }
