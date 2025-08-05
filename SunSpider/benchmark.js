@@ -26,7 +26,7 @@
 
 
 class Benchmark {
-    resultHash = 0
+    resultHash = 0;
     runIteration() {
         this.resultHash ^= run3dCube() | 0;
         this.resultHash ^= run3dRayTrace() | 0;

@@ -1720,4 +1720,5 @@ if (dnaOutputString != expectedDNAOutputString)
 
 if (dnaInput != expectedDNAInput)
     throw "ERROR: bad result: expected " + JSON.stringify(expectedDNAInput) + " but got " + JSON.stringify(dnaInput);
+return dnaOutputString.length + dnaInput.length;
 }
