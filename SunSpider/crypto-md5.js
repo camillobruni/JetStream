@@ -7,6 +7,7 @@
  * See http://pajhome.org.uk/crypt/md5 for more info.
  */
 
+function runCryptoMD5() {
 /*
  * Configurable variables. You may need to tweak these to be compatible with
  * the server-side, but the defaults work in most cases.
@@ -253,7 +254,6 @@ function binl2b64(binarray)
   return str;
 }
 
-function runCryptoMD5() {
     var plainText =
 "Rebellious subjects, enemies to peace,\n\
 Profaners of this neighbour-stained steel,--\n\

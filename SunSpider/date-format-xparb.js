@@ -11,6 +11,7 @@
  * details.
  */
 
+function runDateFormateXparb() {
 Date.parseFunctions = {count:0};
 Date.parseRegexes = [];
 Date.formatFunctions = {count:0};
@@ -408,7 +409,6 @@ Date.patterns = {
     UniversalSortableDateTimePattern: "Y-m-d H:i:sO",
     YearMonthPattern: "F, Y"};
 
-function runDateFormateXparb() {
     var date = new Date("1/1/2007 1:11:11");
     var resultHash = 0x1a2b3c4d;
 

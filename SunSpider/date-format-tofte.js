@@ -1,3 +1,4 @@
+function runDateFormatTofte() {
 Date.prototype.formatDate = function (input,time) {
     // formatDate :
     // a PHP date like function, for formatting date strings
@@ -303,7 +304,6 @@ Date.prototype.formatDate = function (input,time) {
     return ia.join("");
 }
 
-function runDateFormatTofte() {
     var date = new Date("1/1/2007 1:11:11");
     var resultHash = 0x1a2b3c4d;
 

@@ -2,6 +2,7 @@
    http://shootout.alioth.debian.org/
    contributed by Isaac Gouy */
 
+function runNBody() {
 var PI = 3.141592653589793;
 var SOLAR_MASS = 4 * PI * PI;
 var DAYS_PER_YEAR = 365.24;
@@ -151,7 +152,6 @@ NBodySystem.prototype.energy = function(){
    return e;
 }
 
-function runNBody() {
     var ret = 0;
 
     for ( var n = 3; n <= 24; n *= 2 ) {

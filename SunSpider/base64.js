@@ -38,6 +38,7 @@
 
 // From: http://lxr.mozilla.org/mozilla/source/extensions/xml-rpc/src/nsXmlRpcClient.js#956
 
+function runBase64() {
 /* Convert data (an array of integers) to a Base64 string. */
 var toBase64Table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 var base64Pad = '=';
@@ -116,7 +117,6 @@ function base64ToString(data) {
     return result;
 }
 
-function runBase64() {
     var str = "";
 
     for ( var i = 0; i < 8192; i++ )

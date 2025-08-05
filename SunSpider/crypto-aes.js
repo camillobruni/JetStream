@@ -1,5 +1,6 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
+function runCryptoAES() {
 /*
  * AES Cipher function: encrypt 'input' with Rijndael algorithm
  *
@@ -381,7 +382,6 @@ function byteArrayToHexStr(b) {  // convert byte array to hex string for display
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-function runCryptoAES() {
     var plainText =
 "ROMEO: But, soft! what light through yonder window breaks?\n\
 It is the east, and Juliet is the sun.\n\

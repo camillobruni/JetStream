@@ -23,6 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+function run3dRayTrace() {
 function createVector(x,y,z) {
     return new Array(x,y,z);
 }
@@ -438,7 +439,6 @@ for (var y = 0; y < size; y++) {\n\
     return s;
 }
 
-function run3dRayTrace() {
     var testOutput = arrayToCanvasCommands(raytraceScene());
 
     var expectedLength = 20970;

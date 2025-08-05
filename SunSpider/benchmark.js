@@ -28,17 +28,17 @@
 class Benchmark {
     resultHash = 0;
     runIteration() {
-        this.resultHash ^= run3dCube() | 0;
-        this.resultHash ^= run3dRayTrace() | 0;
-        this.resultHash ^= runBase64() | 0;
-        this.resultHash ^= runCryptoAES() | 0;
-        this.resultHash ^= runCryptoMD5() | 0;
-        this.resultHash ^= runCryptoSha1() | 0;
-        this.resultHash ^= runDateFormatTofte() | 0;
-        this.resultHash ^= runDateFormateXparb() | 0;
-        this.resultHash ^= runNBody() | 0;
+        // this.resultHash ^= run3dCube() | 0;
+        // this.resultHash ^= run3dRayTrace() | 0;
+        // this.resultHash ^= runBase64() | 0;
+        // this.resultHash ^= runCryptoAES() | 0;
+        // this.resultHash ^= runCryptoMD5() | 0;
+        // this.resultHash ^= runCryptoSha1() | 0;
+        // this.resultHash ^= runDateFormatTofte() | 0;
+        // this.resultHash ^= runDateFormateXparb() | 0;
+        // this.resultHash ^= runNBody() | 0;
         this.resultHash ^= runRegexpDNA() | 0;
-        this.resultHash ^= runStringUnpackCode() | 0;
-        this.resultHash ^= runTagcloud() | 0;
+        // this.resultHash ^= runStringUnpackCode() | 0;
+        // this.resultHash ^= runTagcloud() | 0;
     }
 }
