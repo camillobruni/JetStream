@@ -2,7 +2,7 @@
 // http://www.speich.net/computer/moztesting/3d.htm
 // Created by Simon Speich
 
-function run() {
+function run3dCube() {
     var Q = new Array();
     var MTrans = new Array();  // transformation matrix
     var MQube = new Array();  // position information of qube
@@ -354,12 +354,4 @@ function run() {
     Testing = null;
     LoopTime = null;
     DisplArea = null;
-}
-
-
-class Benchmark {
-    runIteration() {
-        for (let i = 0; i < 8; ++i)
-            run();
-    }
 }

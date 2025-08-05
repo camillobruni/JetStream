@@ -253,7 +253,7 @@ function binl2b64(binarray)
   return str;
 }
 
-function run() {
+function runCryptoMD5() {
     var plainText =
 "Rebellious subjects, enemies to peace,\n\
 Profaners of this neighbour-stained steel,--\n\
@@ -292,10 +292,3 @@ Once more, on pain of death, all men depart.";
 
 }
 
-
-class Benchmark {
-    runIteration() {
-        for (let i = 0; i < 22; ++i)
-            run();
-    }
-}

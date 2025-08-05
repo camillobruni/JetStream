@@ -381,7 +381,7 @@ function byteArrayToHexStr(b) {  // convert byte array to hex string for display
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-function run() {
+function runCryptoAES() {
     var plainText =
 "ROMEO: But, soft! what light through yonder window breaks?\n\
 It is the east, and Juliet is the sun.\n\
@@ -427,9 +427,3 @@ And sails upon the bosom of the air.";
 }
 
 
-class Benchmark {
-    runIteration() {
-        for (let i = 0; i < 8; ++i)
-            run();
-    }
-}
