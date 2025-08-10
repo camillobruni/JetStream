@@ -348,7 +348,9 @@ class Driver {
                 text +=
                     `<div class="benchmark" id="benchmark-${benchmark.name}">
                     <h3 class="benchmark-name"><a href="in-depth.html#${benchmark.name}">${benchmark.name}</a></h3>
-                    <h4 class="score" id="${overallScoreId}">___</h4><p>`;
+                    <h4 class="score" id="${overallScoreId}">___</h4>
+                    <svg class="plot" id="plot-${benchmark.name}"></svg>
+                    <p>`;
                 for (let i = 0; i < scoreIds.length; i++) {
                     const scoreId = scoreIds[i];
                     const label = description[i];
@@ -692,6 +694,7 @@ class Benchmark {
         this.isAsync = !!plan.isAsync;
         this.scripts = null;
         this.preloads = null;
+        this.results = [];
         this._state = BenchmarkState.READY;
     }
 
@@ -742,8 +745,8 @@ class Benchmark {
             top.currentResolve(results);`;
     }
 
-    processResults() {
-        throw new Error("Subclasses need to implement this");
+    processResults(results) {
+        this.results = results;
     }
 
     get score() {
@@ -1061,6 +1064,39 @@ class Benchmark {
 
         for (const [name, value] of scoreEntries)
             document.getElementById(this.scoreIdentifier(name)).innerHTML = uiFriendlyScore(value);
+
+        this.renderScatterplot();
+    }
+
+    renderScatterplot() {
+        const svg = document.getElementById(`plot-${this.name}`);
+        if (!svg || !this.results || this.results.length === 0)
+            return;
+
+        const scoreElement = document.getElementById(this.scoreIdentifier("Score"));
+        svg.style.width = scoreElement.offsetWidth + 'px';
+        svg.style.height = scoreElement.offsetHeight + 'px';
+
+        const width = scoreElement.offsetWidth;
+        const height = scoreElement.offsetHeight;
+        const padding = 5;
+
+        const maxResult = Math.max(...this.results);
+        const minResult = Math.min(...this.results);
+
+        const xRatio = (width - 2 * padding) / (this.results.length - 1 || 1);
+        const yRatio = (height - 2 * padding) / (maxResult - minResult || 1);
+
+        svg.innerHTML = '';
+
+        for (let i = 0; i < this.results.length; i++) {
+            const result = this.results[i];
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', padding + i * xRatio);
+            circle.setAttribute('cy', height - padding - (result - minResult) * yRatio);
+            circle.setAttribute('r', 1.5);
+            svg.appendChild(circle);
+        }
     }
 
     updateConsoleAfterRun(scoreEntries) {
@@ -1102,13 +1138,15 @@ class DefaultBenchmark extends Benchmark {
     }
 
     processResults(results) {
-        function copyArray(a) {
-            const result = [];
-            for (let x of a)
-                result.push(x);
-            return result;
-        }
-        results = copyArray(results);
+        super.processResults(results);
+        // Create copy since we don't want to sort the original array.
+        function copyArray(a) {const result = [];   
+        for (let x of a)     
+            result.push(x);  
+        return result;       
+    }                        
+                             
+        results = copyArray(results.slice());
 
         this.firstIterationTime = results[0];
         this.firstIterationScore = toScore(results[0]);
@@ -1275,6 +1313,7 @@ class WSLBenchmark extends Benchmark {
     }
 
     processResults(results) {
+        super.processResults(results);
         this.stdlibTime = results[0];
         this.stdlibScore = toScore(results[0]);
         this.mainRunTime = results[1];
@@ -1332,6 +1371,7 @@ class WasmLegacyBenchmark extends Benchmark {
     }
 
     processResults(results) {
+        super.processResults(results);
         this.startupTime = results[0];
         this.startupScore= toScore(results[0]);
         this.runTime = results[1];
