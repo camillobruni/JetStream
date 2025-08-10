@@ -746,7 +746,8 @@ class Benchmark {
     }
 
     processResults(results) {
-        this.results = results;
+        this.results = Array.from(results);
+        return this.results;
     }
 
     get score() {
@@ -1136,15 +1137,7 @@ class DefaultBenchmark extends Benchmark {
     }
 
     processResults(results) {
-        super.processResults(results);
-        // Create copy since we don't want to sort the original array.
-        function copyArray(a) {const result = [];   
-        for (let x of a)     
-            result.push(x);  
-        return result;       
-    }                        
-                             
-        results = copyArray(results.slice());
+        results = super.processResults(results)
 
         this.firstIterationTime = results[0];
         this.firstIterationScore = toScore(results[0]);
@@ -1311,7 +1304,7 @@ class WSLBenchmark extends Benchmark {
     }
 
     processResults(results) {
-        super.processResults(results);
+        results = super.processResults(results);
         this.stdlibTime = results[0];
         this.stdlibScore = toScore(results[0]);
         this.mainRunTime = results[1];
@@ -1369,7 +1362,7 @@ class WasmLegacyBenchmark extends Benchmark {
     }
 
     processResults(results) {
-        super.processResults(results);
+        results = super.processResults(results);
         this.startupTime = results[0];
         this.startupScore= toScore(results[0]);
         this.runTime = results[1];
