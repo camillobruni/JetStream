@@ -24,8 +24,8 @@
 */
 
 :root {
-    --accent-color-primary: #34AADC;
-    --accent-color-secondary: #86D9FF;
+    --color-primary: #34AADC;
+    --color-secondary: #86D9FF;
     --text-color-inverse: white;
     --text-color-primary: black;
     --text-color-secondary: #555555;
@@ -60,7 +60,7 @@ body {
 }
 
 ::selection {
-    background-color: var(--accent-color-primary);
+    background-color: var(--color-primary);
     color: var(--text-color-inverse);
 }
 
@@ -187,7 +187,7 @@ dd {
 
 a:link,
 a:visited {
-    color: var(--accent-color-primary);
+    color: var(--color-primary);
 }
 
 a:hover,
@@ -284,7 +284,7 @@ a.button {
     font-weight: bold;
     font-size: 4rem;
     line-height: 1;
-    color: var(--accent-color-primary);
+    color: var(--color-primary);
     font-weight: 500;
 }
 
@@ -329,8 +329,8 @@ a.button {
 }
 
 .benchmark-running h4, .benchmark-running .result, .benchmark-running label,  .benchmark-running .plot {
-    color: var(--accent-color-secondary);
-    background-color: var(--accent-color-secondary);
+    color: var(--color-secondary);
+    background-color: var(--color-secondary);
     background-image: none;
 }
 
@@ -364,7 +364,7 @@ a.button {
 .benchmark-running h3 {
     background-color: transparent;
     background-image: none;
-    color: var(--accent-color-primary);
+    color: var(--color-primary);
 }
 
 .benchmark-done h3 {
@@ -381,7 +381,7 @@ a.button {
 }
 
 .benchmark-done h3 a:hover {
-    color: var(--accent-color-primary);
+    color: var(--color-primary);
     text-decoration: underline;
 }
 
@@ -393,7 +393,7 @@ a.button {
 }
 
 .benchmark-done h4 {
-    color: var(--accent-color-primary);
+    color: var(--color-primary);
     background-color: none;
 }
 
@@ -424,7 +424,7 @@ a.button {
 }
 
 .plot svg circle {
-    fill: var(--accent-color-primary);
+    fill: var(--color-primary);
     opacity: 0.8;
 }
 
