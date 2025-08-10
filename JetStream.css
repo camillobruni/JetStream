@@ -288,7 +288,7 @@ a.button {
     font-weight: 500;
 }
 
-#result-summary .plot {
+.benchmaark .plot, .benchmark .plot svg {
     display: inline-block;
     vertical-align: middle;
 }
@@ -423,7 +423,7 @@ a.button {
     font-weight: 400;
 }
 
-.plot circle {
+.plot svg circle {
     fill: var(--accent-color-primary);
     opacity: 0.8;
 }

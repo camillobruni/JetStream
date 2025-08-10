@@ -349,7 +349,7 @@ class Driver {
                     `<div class="benchmark" id="benchmark-${benchmark.name}">
                     <h3 class="benchmark-name"><a href="in-depth.html#${benchmark.name}">${benchmark.name}</a></h3>
                     <h4 class="score" id="${overallScoreId}">___</h4>
-                    <svg class="plot" id="plot-${benchmark.name}"></svg>
+                    <h4 class="plot" id="plot-${benchmark.name}">___</h4>
                     <p>`;
                 for (let i = 0; i < scoreIds.length; i++) {
                     const scoreId = scoreIds[i];
@@ -1065,38 +1065,36 @@ class Benchmark {
         for (const [name, value] of scoreEntries)
             document.getElementById(this.scoreIdentifier(name)).innerHTML = uiFriendlyScore(value);
 
-        this.renderScatterplot();
+        this.renderScatterPlot();
     }
 
-    renderScatterplot() {
-        const svg = document.getElementById(`plot-${this.name}`);
-        if (!svg || !this.results || this.results.length === 0)
+    renderScatterPlot() {
+        const plotContainer = document.getElementById(`plot-${this.name}`);
+        if (!plotContainer || !this.results || this.results.length === 0)
             return;
 
         const scoreElement = document.getElementById(this.scoreIdentifier("Score"));
-        svg.style.width = scoreElement.offsetWidth + 'px';
-        svg.style.height = scoreElement.offsetHeight + 'px';
-
         const width = scoreElement.offsetWidth;
         const height = scoreElement.offsetHeight;
-        const padding = 5;
+        plotContainer.style.width = `${width}px`;
+        plotContainer.style.height = `${height}px`;
 
+        const padding = 5;
         const maxResult = Math.max(...this.results);
         const minResult = Math.min(...this.results);
 
         const xRatio = (width - 2 * padding) / (this.results.length - 1 || 1);
         const yRatio = (height - 2 * padding) / (maxResult - minResult || 1);
 
-        svg.innerHTML = '';
-
+        let circlesSVG = "";
         for (let i = 0; i < this.results.length; i++) {
             const result = this.results[i];
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', padding + i * xRatio);
-            circle.setAttribute('cy', height - padding - (result - minResult) * yRatio);
-            circle.setAttribute('r', 1.5);
-            svg.appendChild(circle);
+            const cx = padding + i * xRatio;
+            const cy = height - padding - (result - minResult) * yRatio;
+            circlesSVG += `<circle cx="${cx}" cy="${cy}" r="1.5"></circle>`;
         }
+
+        plotContainer.innerHTML = `<svg>${circlesSVG}</svg>`;
     }
 
     updateConsoleAfterRun(scoreEntries) {
