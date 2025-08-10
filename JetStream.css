@@ -410,6 +410,13 @@ a.button {
     font-weight: bold;
 }
 
+#result-summary .benchmark {
+    text-align: center;
+    max-width: 100%;
+    margin: 0;
+    margin-left: 1.6rem;
+}
+
 .benchmark-done .result {
     color: var(--benchmark-done-result-color);
 }

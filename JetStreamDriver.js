@@ -95,9 +95,16 @@ function displayCategoryScores() {
     if (!categoryScores)
         return;
 
+    let scoreDetails = `<div class="benchmark benchmark-done">`;
+    for (let [category, scores] of categoryScores) {
+        scoreDetails += `<span class="result">
+                <span>${uiFriendlyScore(geomeanScore(scores))}</span>
+                <label> ${category}</label>
+            </span>`;
+    }
+    scoreDetails += "</div>";
     let summaryElement = document.getElementById("result-summary");
-    for (let [category, scores] of categoryScores)
-        summaryElement.innerHTML += `<p> ${category}: ${uiFriendlyScore(geomeanScore(scores))}</p>`
+    summaryElement.innerHTML += scoreDetails;
 
     categoryScores = null;
 }
@@ -127,7 +134,6 @@ if (isInBrowser) {
         const key = keyboardEvent.key;
         if (key === "d" || key === "D") {
             showScoreDetails = true;
-
             displayCategoryScores();
         }
     };
@@ -237,10 +243,8 @@ class Driver {
 
     async start() {
         let statusElement = false;
-        let summaryElement = false;
         if (isInBrowser) {
             statusElement = document.getElementById("status");
-            summaryElement = document.getElementById("result-summary");
             statusElement.innerHTML = `<label>Running...</label>`;
         } else if (!dumpJSONResults)
             console.log("Starting JetStream3");
@@ -308,8 +312,10 @@ class Driver {
         assert(totalScore > 0, `Invalid total score: ${totalScore}`);
 
         if (isInBrowser) {
+            const summaryElement = document.getElementById("result-summary");
             summaryElement.classList.add("done");
-            summaryElement.innerHTML = `<div class="score">${uiFriendlyScore(totalScore)}</div><label>Score</label>`;
+            summaryElement.innerHTML = `<div class="score">${uiFriendlyScore(totalScore)}</div>
+                    <label>Score</label>`;
             summaryElement.onclick = displayCategoryScores;
             if (showScoreDetails)
                 displayCategoryScores();
@@ -318,7 +324,6 @@ class Driver {
             console.log("\n");
             for (let [category, scores] of categoryScores)
                 console.log(`${category}: ${uiFriendlyScore(geomeanScore(scores))}`);
-
             console.log("\nTotal Score: ", uiFriendlyScore(totalScore), "\n");
         }
 
@@ -1092,7 +1097,8 @@ class Benchmark {
             const result = this.results[i];
             const cx = padding + i * xRatio;
             const cy = height - padding - (result - minResult) * yRatio;
-            circlesSVG += `<circle cx="${cx}" cy="${cy}" r="1.5"></circle>`;
+            const title = `Iteration ${i + 1}: ${uiFriendlyDuration(result)}`;
+            circlesSVG += `<circle cx="${cx}" cy="${cy}" r="2"><title>${title}</title></circle>`;
         }
 
         plotContainer.innerHTML = `<svg>${circlesSVG}</svg>`;
