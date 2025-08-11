@@ -1661,7 +1661,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "octane-code-load",
@@ -1670,7 +1669,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "crypto",
@@ -1679,7 +1677,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "delta-blue",
@@ -1688,7 +1685,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "earley-boyer",
@@ -1697,7 +1693,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "gbemu",
@@ -1707,7 +1702,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "mandreel",
@@ -1717,7 +1711,6 @@ let BENCHMARKS = [
         iterations: 80,
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "navier-stokes",
@@ -1726,7 +1719,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "pdfjs",
@@ -1735,7 +1727,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "raytrace",
@@ -1743,7 +1734,6 @@ let BENCHMARKS = [
             "./Octane/raytrace.js",
         ],
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "regexp",
@@ -1752,7 +1742,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "richards",
@@ -1761,7 +1750,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "splay",
@@ -1770,7 +1758,6 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "typescript",
@@ -1783,7 +1770,6 @@ let BENCHMARKS = [
         worstCaseCount: 2,
         deterministicRandom: true,
         tags: ["Default", "Octane"],
-        scoreGroup: "Octane",
     }),
     // RexBench
     new DefaultBenchmark({
