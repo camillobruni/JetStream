@@ -288,7 +288,7 @@ a.button {
     font-weight: 500;
 }
 
-.benchmark .plot, .benchmark .plot svg {
+.benchmark .plot svg {
     display: inline-block;
     vertical-align: middle;
 }
@@ -353,7 +353,6 @@ a.button {
 
 .benchmark-error h3 {
     color: var(--benchmark-error-text-color);
-    font-style: italic;
 }
 
 .benchmark h3 {
