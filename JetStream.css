@@ -389,6 +389,7 @@ a.button {
 .benchmark-running a.info {
     background-color: var(--color-primary);
 }
+
 .benchmark-done a.info {
     background-color: var(--text-color-subtle);
 }
