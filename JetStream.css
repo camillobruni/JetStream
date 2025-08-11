@@ -288,7 +288,7 @@ a.button {
     font-weight: 500;
 }
 
-.benchmaark .plot, .benchmark .plot svg {
+.benchmark .plot, .benchmark .plot svg {
     display: inline-block;
     vertical-align: middle;
 }
@@ -353,6 +353,7 @@ a.button {
 
 .benchmark-error h3 {
     color: var(--benchmark-error-text-color);
+    font-style: italic;
 }
 
 .benchmark h3 {
@@ -369,6 +370,28 @@ a.button {
 
 .benchmark-done h3 {
     color: var(--text-color-subtle);
+}
+
+.benchmark a.info {
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    font-style: italic;
+    font-weight: bold;
+    border-radius: 100%;
+    background-color: var(--benchmark-heading-color);
+    color: var(--text-color-inverse) !important;
+    width: 1em;
+    height: 1em;
+    user-select: none;
+
+}
+
+.benchmark-running a.info {
+    background-color: var(--color-primary);
+}
+.benchmark-done a.info {
+    background-color: var(--text-color-subtle);
 }
 
 .benchmark h3 a,
@@ -428,6 +451,13 @@ a.button {
 .benchmark-done label {
     color: var(--text-color-very-subtle);
     font-weight: 400;
+}
+
+dt:target {
+    background-color: var(--color-secondary);
+    color: var(--text-color-inverse);
+    padding-left: 10px;
+    border-radius: 5px;
 }
 
 .plot svg circle {

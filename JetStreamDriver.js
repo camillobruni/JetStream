@@ -352,7 +352,7 @@ class Driver {
             if (isInBrowser) {
                 text +=
                     `<div class="benchmark" id="benchmark-${benchmark.name}">
-                    <h3 class="benchmark-name"><a href="in-depth.html#${benchmark.name}">${benchmark.name}</a></h3>
+                    <h3 class="benchmark-name">${benchmark.name} <a class="info" href="in-depth.html#${benchmark.name}">i</a></h3>
                     <h4 class="score" id="${overallScoreId}">&nbsp;</h4>
                     <h4 class="plot" id="plot-${benchmark.name}">&nbsp;</h4>
                     <p>`;
