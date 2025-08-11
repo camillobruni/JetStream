@@ -99,7 +99,7 @@ function displayCategoryScores() {
     for (let [category, scores] of categoryScores) {
         scoreDetails += `<span class="result">
                 <span>${uiFriendlyScore(geomeanScore(scores))}</span>
-                <label> ${category}</label>
+                <label>${category}</label>
             </span>`;
     }
     scoreDetails += "</div>";
@@ -353,13 +353,13 @@ class Driver {
                 text +=
                     `<div class="benchmark" id="benchmark-${benchmark.name}">
                     <h3 class="benchmark-name"><a href="in-depth.html#${benchmark.name}">${benchmark.name}</a></h3>
-                    <h4 class="score" id="${overallScoreId}">___</h4>
-                    <h4 class="plot" id="plot-${benchmark.name}">___</h4>
+                    <h4 class="score" id="${overallScoreId}">&nbsp;</h4>
+                    <h4 class="plot" id="plot-${benchmark.name}">&nbsp;</h4>
                     <p>`;
                 for (let i = 0; i < scoreIds.length; i++) {
                     const scoreId = scoreIds[i];
                     const label = description[i];
-                    text += `<span class="result"><span id="${scoreId}">___</span><label>${label}</label></span>`
+                    text += `<span class="result"><span id="${scoreId}">&nbsp;</span><label>${label}</label></span>`
                 }
                 text += `</p></div>`;
             }
