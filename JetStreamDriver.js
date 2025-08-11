@@ -221,9 +221,8 @@ class Driver {
         this.isReady = false;
         this.isDone = false;
         this.errors = [];
-        // Make benchmark list unique and sort it.
-        this.benchmarks = Array.from(new Set(benchmarks));
-        this.benchmarks.sort((a, b) => a.plan.name.toLowerCase() < b.plan.name.toLowerCase() ? 1 : -1);
+        this.benchmarks = this.setupBenchmarks(benchmarks)
+        this.scoreGroups = this.setupScoreGroups();
         assert(this.benchmarks.length, "No benchmarks selected");
         // TODO: Cleanup / remove / merge `blobDataCache` and `loadCache` vs.
         // the global `fileLoader` cache.
@@ -233,6 +232,28 @@ class Driver {
         this.counter.loadedResources = 0;
         this.counter.totalResources = 0;
         this.counter.failedPreloadResources = 0;
+    }
+
+    setupBenchmarks(benchmarks) {
+        // Make benchmark list unique and sort it.
+        benchmarks = Array.from(new Set(benchmarks));
+        benchmarks.sort((a, b) => a.plan.name.toLowerCase() < b.plan.name.toLowerCase() ? 1 : -1);
+        return benchmarks;
+    }
+
+    setupScoreGroups() {
+        const groups = new Map();
+        for (const benchmark of benchmarks) {
+            const scoreGroupName = benchmark.plan.scoreGroup ?? benchmark.name;
+            let scoreGroup = groups.get(scoreGroupName);
+            if (!scoreGroup) {
+                scoreGroup = [];
+                groups.set(scoreGroupName, scoreGroup); 
+            }
+            scoreGroup.push(benchmark);
+        }
+        return  Array.from(groups.entries()).map(
+                ([groupName, benchmarks]) => new ScoreGroup(groupName, benchmarks));
     }
 
     async start() {
@@ -284,22 +305,22 @@ class Driver {
         }
 
         const allScores = [];
-        for (const benchmark of this.benchmarks) {
-            const score = benchmark.score;
-            assert(score > 0, `Invalid ${benchmark.name} score: ${score}`);
+        for (const scoreGroup of this.scoreGroups) {
+            const score = scoreGroup.score;
+            assert(score > 0, `Invalid ${scoreGroup.name} score: ${score}`);
             allScores.push(score);
         }
 
         categoryScores = new Map;
-        for (const benchmark of this.benchmarks) {
-            for (let category of Object.keys(benchmark.subScores()))
+        for (const scoreGroup of this.scoreGroups) {
+            for (let category of Object.keys(scoreGroup.subScores()))
                 categoryScores.set(category, []);
         }
 
-        for (const benchmark of this.benchmarks) {
-            for (let [category, value] of Object.entries(benchmark.subScores())) {
+        for (const scoreGroup of this.scoreGroups) {
+            for (let [category, value] of Object.entries(scoreGroup.subScores())) {
                 const arr = categoryScores.get(category);
-                assert(value > 0, `Invalid ${benchmark.name} ${category} score: ${value}`);
+                assert(value > 0, `Invalid ${scoreGroup.name} ${category} score: ${value}`);
                 arr.push(value);
             }
         }
@@ -343,11 +364,14 @@ class Driver {
 
             const scoreIds = benchmark.scoreIdentifiers();
             const overallScoreId = scoreIds.pop();
+            let classes = "benchmark"
+            let isGroupedBenchmark =benchmark.scoreGroup.size > 1
+            if (isGroupedBenchmark)
+                classes += " grouped";
 
             if (isInBrowser) {
-                text +=
-                    `<div class="benchmark" id="benchmark-${benchmark.name}">
-                    <h3 class="benchmark-name"><a href="in-depth.html#${benchmark.name}">${benchmark.name}</a></h3>
+                text += `<div class="${classes}" id="benchmark-${benchmark.name}">
+                    <h3 class="benchmark-name"><a href="in-depth.html#${benchmark.name}">${benchmark.name}${isGroupedBenchmark ? " *":""}</a></h3>
                     <h4 class="score" id="${overallScoreId}">___</h4><p>`;
                 for (let i = 0; i < scoreIds.length; i++) {
                     const scoreId = scoreIds[i];
@@ -603,6 +627,37 @@ class Scripts {
     }
 }
 
+class ScoreGroup {
+    constructor(name, benchmarks) {
+        this.name = name;
+        this.benchmarks = benchmarks;
+        benchmarks.forEach(benchmark => benchmark.scoreGroup = this);
+    }
+
+    get size() {
+        return this.benchmarks.length;
+    }
+
+    add(benchmark) {
+        assert(!this.benchmarks.has(benchmark));
+        this.benchmarks.add(benchmark);
+    }
+
+    get score() {
+        return geomeanScore(this.benchmarks.map(each => each.score));
+    }
+
+    subScores() {
+        const allSubScores = this.benchmarks.map(each => each.subScores());
+        const subScores = { __proto__: null};
+        for (const name of Object.keys(allSubScores[0])) {
+            subScores[name] = geomeanScore(allSubScores.map(each => each[name]));
+        }
+        return subScores;
+    }
+}
+
+
 class ShellScripts extends Scripts {
     run() {
         let globalObject;
@@ -693,6 +748,7 @@ class Benchmark {
         this.scripts = null;
         this.preloads = null;
         this._state = BenchmarkState.READY;
+        this.scoreGroup = undefined;
     }
 
     processTags(rawTags) {
@@ -1605,6 +1661,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "octane-code-load",
@@ -1613,6 +1670,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "crypto",
@@ -1621,6 +1679,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "delta-blue",
@@ -1629,6 +1688,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "earley-boyer",
@@ -1637,6 +1697,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "gbemu",
@@ -1646,6 +1707,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "mandreel",
@@ -1655,6 +1717,7 @@ let BENCHMARKS = [
         iterations: 80,
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "navier-stokes",
@@ -1663,6 +1726,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "pdfjs",
@@ -1671,6 +1735,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "raytrace",
@@ -1678,6 +1743,7 @@ let BENCHMARKS = [
             "./Octane/raytrace.js",
         ],
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "regexp",
@@ -1686,6 +1752,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "richards",
@@ -1694,6 +1761,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "splay",
@@ -1702,6 +1770,7 @@ let BENCHMARKS = [
         ],
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     new DefaultBenchmark({
         name: "typescript",
@@ -1714,6 +1783,7 @@ let BENCHMARKS = [
         worstCaseCount: 2,
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+        scoreGroup: "Octane",
     }),
     // RexBench
     new DefaultBenchmark({
@@ -2387,6 +2457,7 @@ const SUNSPIDER_TESTS = [
     "string-unpack-code",
     "tagcloud",
 ];
+
 for (const test of SUNSPIDER_TESTS) {
     BENCHMARKS.push(new DefaultBenchmark({
         name: `${test}-SP`,
@@ -2394,8 +2465,10 @@ for (const test of SUNSPIDER_TESTS) {
             `./SunSpider/${test}.js`
         ],
         tags: ["Default", "SunSpider"],
+        scoreGroup: "SunSpider",
     }));
 }
+
 
 // WTB (Web Tooling Benchmark) tests
 const WTB_TESTS = [

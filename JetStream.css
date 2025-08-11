@@ -304,6 +304,9 @@ a.button {
 .benchmark h3 {
     color:  rgb(183, 183, 183);
 }
+.benchmark.grouped .benchmark-name {
+    font-style: italic;
+}
 
 .benchmark-running h4, .benchmark-running .result, .benchmark-running label {
     color: #86D9FF;
