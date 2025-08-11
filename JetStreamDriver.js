@@ -184,7 +184,7 @@ function updateUI() {
 function uiFriendlyNumber(num) {
     if (Number.isInteger(num))
         return num;
-    return num.toFixed(3);
+    return num.toFixed(2);
 }
 
 function uiFriendlyScore(num) {
@@ -1082,8 +1082,6 @@ class Benchmark {
         const scoreElement = document.getElementById(this.scoreIdentifier("Score"));
         const width = scoreElement.offsetWidth;
         const height = scoreElement.offsetHeight;
-        plotContainer.style.width = `${width}px`;
-        plotContainer.style.height = `${height}px`;
 
         const padding = 5;
         const maxResult = Math.max(...this.results);
@@ -1091,6 +1089,7 @@ class Benchmark {
 
         const xRatio = (width - 2 * padding) / (this.results.length - 1 || 1);
         const yRatio = (height - 2 * padding) / (maxResult - minResult || 1);
+        const radius = Math.max(1.5, Math.min(2.5, 10 - (this.iterations / 10)));
 
         let circlesSVG = "";
         for (let i = 0; i < this.results.length; i++) {
@@ -1098,10 +1097,9 @@ class Benchmark {
             const cx = padding + i * xRatio;
             const cy = height - padding - (result - minResult) * yRatio;
             const title = `Iteration ${i + 1}: ${uiFriendlyDuration(result)}`;
-            circlesSVG += `<circle cx="${cx}" cy="${cy}" r="2"><title>${title}</title></circle>`;
+            circlesSVG += `<circle cx="${cx}" cy="${cy}" r="${radius}"><title>${title}</title></circle>`;
         }
-
-        plotContainer.innerHTML = `<svg>${circlesSVG}</svg>`;
+        plotContainer.innerHTML = `<svg width="${width}px" height="${height}px">${circlesSVG}</svg>`;
     }
 
     updateConsoleAfterRun(scoreEntries) {
