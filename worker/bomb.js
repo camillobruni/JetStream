@@ -23,70 +23,111 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-let cycleCount = 20;
+const MAX_CONCURRENCY_STARTUP = 8;
+const MAX_CONCURRENT_RUNNING = 16;
 
-let resolve = null;
-
-let numWorkers = 0;
-function startWorker(file) {
-    numWorkers++;
-    let worker = new Worker(file);
-    worker.onmessage = function(event) {
-        if (event.data === "done") {
-            --numWorkers;
-            if (!numWorkers)
-                resolve();
-        }
-    };
-}
-
-function startCycle() {
-    if (!isInBrowser)
-        throw new Error("Only works in browser");
-
-    const tests = [
-        rayTrace3D
-        , accessNbody
-        , morph3D
-        , cube3D
-        , accessFunnkuch
-        , accessBinaryTrees
-        , accessNsieve
-        , bitopsBitwiseAnd
-        , bitopsNsieveBits
-        , controlflowRecursive
-        , bitops3BitBitsInByte
-        , botopsBitsInByte
-        , cryptoAES
-        , cryptoMD5
-        , cryptoSHA1
-        , dateFormatTofte
-        , dateFormatXparb
-        , mathCordic
-        , mathPartialSums
-        , mathSpectralNorm
-        , stringBase64
-        , stringFasta
-        , stringValidateInput
-        , stringTagcloud
-        , stringUnpackCode
-        , regexpDNA
-    ];
-
-    for (let test of tests)
-        startWorker(test);
-
-}
-
+const WORKER_SUB_TESTS = [
+    rayTrace3D,
+    accessNbody,
+    morph3D,
+    cube3D,
+    accessFunnkuch,
+    accessBinaryTrees,
+    accessNsieve,
+    bitopsBitwiseAnd,
+    bitopsNsieveBits,
+    controlflowRecursive,
+    bitops3BitBitsInByte,
+    botopsBitsInByte,
+    cryptoAES,
+    cryptoMD5,
+    cryptoSHA1,
+    dateFormatTofte,
+    dateFormatXparb,
+    mathCordic,
+    mathPartialSums,
+    mathSpectralNorm,
+    stringBase64,
+    stringFasta,
+    stringValidateInput,
+    stringTagcloud,
+    stringUnpackCode,
+    regexpDNA,
+];
 
 class Benchmark {
-    async runIteration() {
-        if (numWorkers !== 0 || resolve)
-            throw new Error("Something bad happened.");
+    workers = []
 
-        let promise = new Promise((res) => resolve = res);
-        startCycle();
-        await promise;
-        resolve = null;
+    async runIteration() {
+        if (this.workers.length != 0) {
+            console.error(this)
+            throw new Error("Something bad happened.");
+        }
+        await this.startWorkers();
+        if (this.workers.length % MAX_CONCURRENCY_STARTUP != 0)
+            throw new Error(`Invalid worker count: ${this.workers.length}`);
+        await this.runSubTests();
+        this.workers = [];
+    }
+
+    async startWorkers() {
+        if (!isInBrowser)
+            throw new Error("Only works in browser");
+
+        let testIndex = 0;
+        while (testIndex < WORKER_SUB_TESTS.length) {
+            const workerGroup = [];
+            for (let i = 0; i < MAX_CONCURRENCY_STARTUP; i++) {
+                const worker = new BenchmarkWorker(WORKER_SUB_TESTS[testIndex % WORKER_SUB_TESTS.length]);
+                workerGroup.push(worker)
+                this.workers.push(worker);
+                testIndex++;
+            }
+            await Promise.all(workerGroup.map(worker => worker.readyPromise));
+        }
+    }
+
+    async runSubTests() {
+        const workers = this.workers.slice();
+        while (workers.length > 0) {
+            const workerGroup = workers.splice(workers.length - MAX_CONCURRENT_RUNNING, MAX_CONCURRENT_RUNNING);
+            await Promise.all(workerGroup.map(worker => worker.runWorkload()));
+        }
+    }
+}
+
+
+class BenchmarkWorker {
+    _worker;
+    constructor(file) {
+        this._worker = new Worker(file);
+        this.readyPromise = new Promise((resolve, reject) => {
+            this._worker.onmessage = (event) => {
+                switch(event.data) {
+                    case "ready": {
+                        resolve()
+                        break;
+                    }
+                    default:
+                        reject(new Error(`Unknown worker message: ${event.data}`))
+                }
+            };
+        });
+    }
+
+    async runWorkload() {
+        await new Promise((resolve, reject) => {
+            this._worker.onmessage = (event) => {
+                switch(event.data) {
+                    case "done": {
+                        resolve()
+                        break;
+                    }
+                    default:
+                        reject(new Error(`Unknown worker message: ${event.data}`));
+                }
+            };
+            this._worker.postMessage("start");
+        });
     }
 }
