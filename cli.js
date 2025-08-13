@@ -67,8 +67,10 @@ async function runJetStream() {
         await JetStream.initialize();
         await JetStream.start();
     } catch (e) {
-        console.error("JetStream3 failed: " + e);
-        console.error(e.stack);
+        console.error("JetStream3 failed:", e);
+        const stack = e.stack;
+        if (stack)
+            console.error(stack);
         throw e;
     }
 }

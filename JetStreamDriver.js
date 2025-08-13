@@ -631,18 +631,8 @@ class ShellScripts extends Scripts {
         } else
             globalObject = runString("");
 
-        globalObject.console = {
-            log: globalObject.print,
-            assert(condition, message) {
-                if (!condition) {
-                    throw new Error(`Assertion failed: ${message}`);
-                }
-            },
-            warn(e) { print("Warn: " + e); },
-            error(e) { print("Error: " + e); },
-            debug(e) { print("Debug: " + e); },
-        };
-
+        assert(console, "Missing console object");
+        globalObject.console = console;
         globalObject.self = globalObject;
         globalObject.top = {
             currentResolve,
