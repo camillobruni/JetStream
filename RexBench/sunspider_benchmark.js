@@ -39,7 +39,7 @@ reportResult(results);
 
 
 let runRegexDNABenchmark = null;
-if (!isInBrowser) {
+if (!JetStream.isInBrowser) {
     let sources = [
         "benchmark.js"
         , "SunSpider/regex-dna.js"
@@ -56,7 +56,7 @@ const RegexDNABenchmarkRunner = {
     cells: {}
 };
 
-if (isInBrowser) {
+if (JetStream.isInBrowser) {
     RegexDNABenchmarkRunner.cells = {
         firstIteration: document.getElementById("RegexDNAFirstIteration"),
         averageWorstCase: document.getElementById("RegexDNAAverageWorstCase"),

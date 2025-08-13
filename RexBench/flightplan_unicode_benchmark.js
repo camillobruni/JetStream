@@ -43,7 +43,7 @@ reportResult(results);
 
 
 let runFlightPlannerUnicodeBenchmark = null;
-if (!isInBrowser) {
+if (!JetStream.isInBrowser) {
     let sources = [
         "benchmark.js"
         , "FlightPlanner/airways.js"
@@ -64,7 +64,7 @@ const FlightPlannerUnicodeBenchmarkRunner = {
     cells: {}
 };
 
-if (isInBrowser) {
+if (JetStream.isInBrowser) {
     FlightPlannerUnicodeBenchmarkRunner.cells = {
         firstIteration: document.getElementById("FlightPlannerUnicodeFirstIteration"),
         averageWorstCase: document.getElementById("FlightPlannerUnicodeAverageWorstCase"),

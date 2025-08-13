@@ -1190,26 +1190,26 @@ class AsyncBenchmark extends DefaultBenchmark {
                 JetStream.getBinary = async function(blobURL) {
                     const response = await fetch(blobURL);
                     return new Int8Array(await response.arrayBuffer());
-                }
+                };
 
                 JetStream.getString = async function(blobURL) {
                     const response = await fetch(blobURL);
                     return response.text();
-                }
+                };
 
                 JetStream.dynamicImport = async function(blobURL) {
                     return await import(blobURL);
-                }
+                };
             `;
         } else {
             str += `
                 JetStream.getBinary = async function(path) {
                     return new Int8Array(read(path, "binary"));
-                }
+                };
 
                 JetStream.getString = async function(path) {
                     return read(path);
-                }
+                };
 
                 JetStream.dynamicImport = async function(path) {
                     try {
@@ -1219,7 +1219,7 @@ class AsyncBenchmark extends DefaultBenchmark {
                         // without the "./" prefix (e.g., JSC requires it).
                         return await import(path.slice("./".length))
                     }
-                }
+                };
             `;
         }
         return str;
@@ -1419,7 +1419,7 @@ class WasmLegacyBenchmark extends Benchmark {
     }
 
     get runnerCode() {
-        let str = `JetStream.loadBlob(key, path, andThen) {`;
+        let str = `JetStream.loadBlob = function(key, path, andThen) {`;
 
         if (isInBrowser) {
             str += `

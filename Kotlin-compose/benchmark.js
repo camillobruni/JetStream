@@ -124,8 +124,8 @@ class Benchmark {
     // We patched `skiko.mjs` to not immediately instantiate the `skiko.wasm`
     // module, so that we can move the dynamic JS import here but measure 
     // WebAssembly compilation and instantiation as part of the first iteration.
-    this.skikoInstantiate = (await JetStream.dynamicImport(JetStream.skikoJsModule)).default;
-    this.mainInstantiate = (await JetStream.dynamicImport(JetStream.composeJsModule)).instantiate;
+    this.skikoInstantiate = (await JetStream.dynamicImport(JetStream.preload.skikoJsModule)).default;
+    this.mainInstantiate = (await JetStream.dynamicImport(JetStream.preload.composeJsModule)).instantiate;
   }
 
   async runIteration() {

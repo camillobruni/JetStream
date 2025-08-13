@@ -40,7 +40,7 @@ reportResult(results);
 
 
 let runUniPokerBenchmark = null;
-if (!isInBrowser) {
+if (!JetStream.isInBrowser) {
     let sources = [
         "benchmark.js"
         , "UniPoker/poker.js"
@@ -58,7 +58,7 @@ const UniPokerBenchmarkRunner = {
     cells: {}
 };
 
-if (isInBrowser) {
+if (JetStream.isInBrowser) {
     UniPokerBenchmarkRunner.cells = {
         firstIteration: document.getElementById("UniPokerFirstIteration"),
         averageWorstCase: document.getElementById("UniPokerAverageWorstCase"),

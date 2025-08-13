@@ -41,7 +41,7 @@ function startWorker(file) {
 }
 
 function startCycle() {
-    if (!isInBrowser)
+    if (!JetStream.isInBrowser)
         throw new Error("Only works in browser");
 
     const tests = [
