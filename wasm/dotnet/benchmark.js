@@ -124,7 +124,7 @@ class Benchmark {
             ]
         };
 
-        this.dotnet = (await JetStream.dynamicImport(JetStream.dotnetUrl)).dotnet;
+        this.dotnet = (await JetStream.dynamicImport(JetStream.preload.dotnetUrl)).dotnet;
         this.api = await this.dotnet.withModuleConfig({ locateFile: e => e }).withConfig(config).create();
         this.exports = await this.api.getAssemblyExports("dotnet.dll");
 

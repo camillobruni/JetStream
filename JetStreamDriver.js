@@ -633,9 +633,14 @@ class ShellScripts extends Scripts {
 
         globalObject.console = {
             log: globalObject.print,
-            warn: (e) => { print("Warn: " + e); },
-            error: (e) => { print("Error: " + e); },
-            debug: (e) => { print("Debug: " + e); },
+            assert(condition, message) {
+                if (!condition) {
+                    throw new Error(`Assertion failed: ${message}`);
+                }
+            },
+            warn(e) { print("Warn: " + e); },
+            error(e) { print("Error: " + e); },
+            debug(e) { print("Debug: " + e); },
         };
 
         globalObject.self = globalObject;
@@ -645,14 +650,8 @@ class ShellScripts extends Scripts {
         };
 
         globalObject.performance ??= performance;
-        for (const script of this.scripts) {
-            try {
+        for (const script of this.scripts)
             globalObject.loadString(script);
-            } catch(e) {
-                console.log(script);
-                throw e;
-            }
-        }
 
         return isD8 ? realm : globalObject;
     }
