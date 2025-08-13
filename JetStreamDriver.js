@@ -561,8 +561,11 @@ class Scripts {
     constructor() {
         this.scripts = [];
         this.add(`
-            const isInBrowser = ${isInBrowser};
-            const isD8 = ${isD8};
+            globalThis.JetStream = {
+                isInBrowser: ${isInBrowser},
+                isD8: ${isD8},
+                preload: {},
+            };
             if (typeof performance.mark === 'undefined') {
                 performance.mark = function(name) { return { name }};
             }
@@ -642,8 +645,14 @@ class ShellScripts extends Scripts {
         };
 
         globalObject.performance ??= performance;
-        for (const script of this.scripts)
+        for (const script of this.scripts) {
+            try {
             globalObject.loadString(script);
+            } catch(e) {
+                console.log(script);
+                throw e;
+            }
+        }
 
         return isD8 ? realm : globalObject;
     }
@@ -725,10 +734,10 @@ class Benchmark {
     }
 
     get runnerCode() {
-        return `
-            let __benchmark = new Benchmark(${this.iterations});
-            let results = [];
-            let benchmarkName = "${this.name}";
+        return `{
+            const benchmark = new Benchmark(${this.iterations});
+            const results = [];
+            const benchmarkName = "${this.name}";
 
             for (let i = 0; i < ${this.iterations}; i++) {
                 ${this.preIterationCode}
@@ -737,7 +746,7 @@ class Benchmark {
                 const iterationStartMark = performance.mark(iterationMarkLabel);
 
                 let start = performance.now();
-                __benchmark.runIteration();
+                benchmark.runIteration(i);
                 let end = performance.now();
 
                 performance.measure(iterationMarkLabel, iterationMarkLabel);
@@ -746,8 +755,9 @@ class Benchmark {
 
                 results.push(Math.max(1, end - start));
             }
-            __benchmark.validate?.(${this.iterations});
-            top.currentResolve(results);`;
+            benchmark.validate?.(${this.iterations});
+            top.currentResolve(results);
+        };`;
     }
 
     processResults(results) {
@@ -773,7 +783,7 @@ class Benchmark {
     get prerunCode() { return null; }
 
     get preIterationCode() {
-        let code = `__benchmark.prepareForNextIteration?.();`;
+        let code = `benchmark.prepareForNextIteration?.();`;
         if (this.plan.deterministicRandom)
             code += `Math.random.__resetSeed();`;
 
@@ -804,7 +814,7 @@ class Benchmark {
         if (this.plan.preload) {
             let preloadCode = "";
             for (let [ variableName, blobURLOrPath ] of this.preloads)
-                preloadCode += `const ${variableName} = "${blobURLOrPath}";\n`;
+                preloadCode += `JetStream.preload.${variableName} = "${blobURLOrPath}";\n`;
             scripts.add(preloadCode);
         }
 
@@ -1177,31 +1187,31 @@ class AsyncBenchmark extends DefaultBenchmark {
         // with this class and make all benchmarks async.
         if (isInBrowser) {
             str += `
-                async function getBinary(blobURL) {
+                JetStream.getBinary = async function(blobURL) {
                     const response = await fetch(blobURL);
                     return new Int8Array(await response.arrayBuffer());
                 }
 
-                async function getString(blobURL) {
+                JetStream.getString = async function(blobURL) {
                     const response = await fetch(blobURL);
                     return response.text();
                 }
 
-                async function dynamicImport(blobURL) {
+                JetStream.dynamicImport = async function(blobURL) {
                     return await import(blobURL);
                 }
             `;
         } else {
             str += `
-                async function getBinary(path) {
+                JetStream.getBinary = async function(path) {
                     return new Int8Array(read(path, "binary"));
                 }
 
-                async function getString(path) {
+                JetStream.getString = async function(path) {
                     return read(path);
                 }
 
-                async function dynamicImport(path) {
+                JetStream.dynamicImport = async function(path) {
                     try {
                         return await import(path);
                     } catch (e) {
@@ -1218,10 +1228,10 @@ class AsyncBenchmark extends DefaultBenchmark {
     get runnerCode() {
         return `
         async function doRun() {
-            let __benchmark = new Benchmark();
-            await __benchmark.init?.();
-            let results = [];
-            let benchmarkName = "${this.name}";
+            const benchmark = new Benchmark(${this.iterations});
+            await benchmark.init?.();
+            const results = [];
+            const benchmarkName = "${this.name}";
 
             for (let i = 0; i < ${this.iterations}; i++) {
                 ${this.preIterationCode}
@@ -1230,7 +1240,7 @@ class AsyncBenchmark extends DefaultBenchmark {
                 const iterationStartMark = performance.mark(iterationMarkLabel);
 
                 let start = performance.now();
-                await __benchmark.runIteration();
+                await benchmark.runIteration(i);
                 let end = performance.now();
 
                 performance.measure(iterationMarkLabel, iterationMarkLabel);
@@ -1239,9 +1249,9 @@ class AsyncBenchmark extends DefaultBenchmark {
 
                 results.push(Math.max(1, end - start));
             }
-            __benchmark.validate?.(${this.iterations});
+            benchmark.validate?.(${this.iterations});
             top.currentResolve(results);
-        }
+        };
         doRun().catch((error) => { top.currentReject(error); });`
     }
 };
@@ -1252,7 +1262,6 @@ class WasmEMCCBenchmark extends AsyncBenchmark {
     get prerunCode() {
         let str = `
             let verbose = false;
-
             let globalObject = this;
 
             abort = quit = function() {
@@ -1260,21 +1269,23 @@ class WasmEMCCBenchmark extends AsyncBenchmark {
                     console.log('Intercepted quit/abort');
             };
 
-            oldPrint = globalObject.print;
-            globalObject.print = globalObject.printErr = (...args) => {
-                if (verbose)
-                    console.log('Intercepted print: ', ...args);
-            };
+            {
+                const oldPrint = globalObject.print;
+                globalObject.print = globalObject.printErr = (...args) => {
+                    if (verbose)
+                        console.log('Intercepted print: ', ...args);
+                };
 
-            let Module = {
-                preRun: [],
-                postRun: [],
-                noInitialRun: true,
-                print: print,
-                printErr: printErr
-            };
+                let Module = {
+                    preRun: [],
+                    postRun: [],
+                    noInitialRun: true,
+                    print: print,
+                    printErr: printErr
+                };
 
-            globalObject.Module = Module;
+                globalObject.Module = Module;
+            };
             ${super.prerunCode};
         `;
 
@@ -1302,34 +1313,35 @@ class WSLBenchmark extends Benchmark {
 
     get runnerCode() {
         return `
-            let benchmark = new Benchmark();
-            const benchmarkName = "${this.name}";
-
-            let results = [];
             {
-                const markLabel = benchmarkName + "-stdlib";
-                const startMark = performance.mark(markLabel);
+                const benchmark = new Benchmark();
+                const benchmarkName = "${this.name}";
 
-                let start = performance.now();
-                benchmark.buildStdlib();
-                results.push(performance.now() - start);
+                let results = [];
+                {
+                    const markLabel = benchmarkName + "-stdlib";
+                    const startMark = performance.mark(markLabel);
 
-                performance.measure(markLabel, markLabel);
-            }
+                    let start = performance.now();
+                    benchmark.buildStdlib();
+                    results.push(performance.now() - start);
 
-            {
-                const markLabel = benchmarkName + "-mainRun";
-                const startMark = performance.mark(markLabel);
+                    performance.measure(markLabel, markLabel);
+                };
 
-                let start = performance.now();
-                benchmark.run();
-                results.push(performance.now() - start);
+                {
+                    const markLabel = benchmarkName + "-mainRun";
+                    const startMark = performance.mark(markLabel);
 
-                performance.measure(markLabel, markLabel);
-            }
+                    let start = performance.now();
+                    benchmark.run();
+                    results.push(performance.now() - start);
 
-            top.currentResolve(results);
-            `;
+                    performance.measure(markLabel, markLabel);
+                };
+
+                top.currentResolve(results);
+            };`;
     }
 
     subScores() {
@@ -1387,30 +1399,31 @@ class WasmLegacyBenchmark extends Benchmark {
                     console.log('Intercepted quit/abort');
             };
 
-            oldPrint = globalObject.print;
-            oldConsoleLog = globalObject.console.log;
-            globalObject.print = globalObject.printErr = (...args) => {
-                if (verbose)
-                    oldConsoleLog('Intercepted print: ', ...args);
-            };
+            {
+                const oldConsoleLog = globalObject.console.log;
+                globalObject.print = globalObject.printErr = (...args) => {
+                    if (verbose)
+                        oldConsoleLog('Intercepted print: ', ...args);
+                };
 
-            let Module = {
-                preRun: [],
-                postRun: [],
-                print: globalObject.print,
-                printErr: globalObject.print
+                let Module = {
+                    preRun: [],
+                    postRun: [],
+                    print: globalObject.print,
+                    printErr: globalObject.print
+                };
+                globalObject.Module = Module;
             };
-            globalObject.Module = Module;
-            `;
+        `;
         return str;
     }
 
     get runnerCode() {
-        let str = `function loadBlob(key, path, andThen) {`;
+        let str = `JetStream.loadBlob(key, path, andThen) {`;
 
         if (isInBrowser) {
             str += `
-                var xhr = new XMLHttpRequest();
+                const xhr = new XMLHttpRequest();
                 xhr.open('GET', path, true);
                 xhr.responseType = 'arraybuffer';
                 xhr.onload = function() {
@@ -1437,15 +1450,15 @@ class WasmLegacyBenchmark extends Benchmark {
                     console.log(e.stack);
                     throw e;
                 }
-            })
+            });
             `;
         }
 
-        str += "}";
+        str += "};\n";
 
         const keys = Object.keys(this.plan.preload);
         for (let i = 0; i < keys.length; ++i) {
-            str += `loadBlob("${keys[i]}", "${this.plan.preload[keys[i]]}", () => {\n`;
+            str += `JetStream.loadBlob("${keys[i]}", "${this.plan.preload[keys[i]]}", () => {\n`;
         }
         if (this.plan.async) {
             str += `doRun().catch((e) => {
