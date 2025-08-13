@@ -569,6 +569,12 @@ class Scripts {
             if (typeof performance.measure === 'undefined') {
                 performance.measure = function() {};
             }
+            console ??= {};
+            console.assert ??= function(condition, message) {
+                if (!condition) {
+                    throw new Error("Assertion failed: " + message);
+                }
+            }
         `);
     }
 
@@ -1724,6 +1730,22 @@ let BENCHMARKS = [
         worstCaseCount: 2,
         deterministicRandom: true,
         tags: ["Default", "Octane"],
+    }),
+    // 
+    new AsyncBenchmark({
+        name: "d3-mock",
+        files: [
+            "./d3-mock/dist/d3.js",
+            "./d3-mock/src/mock/dom.js",
+            "./d3-mock/src/chordDependency.js",
+            "./d3-mock/src/treeOfLife.js",
+            "./d3-mock/benchmark.js",
+        ],
+        preload: {
+            FLARE_IMPORTS_BLOB: "./d3-mock/data/flare-imports.csv",
+            LIFE_BLOB: "./d3-mock/data/life.txt",
+        },
+        tags: ["Default", "d3"],
     }),
     // RexBench
     new DefaultBenchmark({
