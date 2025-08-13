@@ -60,6 +60,7 @@ globalThis.fetch = async function(url) {
       },
     };
   }
+  console.error("Shoudl not be called", url)
 
   // This should only be called in the browser, where fetch() is available.
   return originalFetch(url);
