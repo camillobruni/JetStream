@@ -2077,15 +2077,28 @@ let BENCHMARKS = [
         tags: ["Default", "Wasm"],
     }),
     new WasmEMCCBenchmark({
-        name: "Dart-flute-wasm",
+        name: "Dart-flute-complex-wasm",
         files: [
             "./Dart/benchmark.js",
         ],
         preload: {
-            jsModule: "./Dart/build/flute.dart2wasm.mjs",
-            wasmBinary: "./Dart/build/flute.dart2wasm.wasm",
+            jsModule: "./Dart/build/flute.complex.dart2wasm.mjs",
+            wasmBinary: "./Dart/build/flute.complex.dart2wasm.wasm",
         },
         iterations: 15,
+        worstCaseCount: 2,
+        tags: ["Wasm"],
+    }),
+    new WasmEMCCBenchmark({
+        name: "Dart-flute-todomvc-wasm",
+        files: [
+            "./Dart/benchmark.js",
+        ],
+        preload: {
+            jsModule: "./Dart/build/flute.todomvc.dart2wasm.mjs",
+            wasmBinary: "./Dart/build/flute.todomvc.dart2wasm.wasm",
+        },
+        iterations: 30,
         worstCaseCount: 2,
         tags: ["Default", "Wasm"],
     }),

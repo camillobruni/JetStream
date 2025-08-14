@@ -282,7 +282,7 @@ class Benchmark {
     const framesToDraw = 100;
     const initialFramesToSkip = 0;
     const dartArgs = [
-      startTimeSinceEpochSeconds,
+      startTimeSinceEpochSeconds.toString(),
       framesToDraw.toString(),
       initialFramesToSkip.toString()
     ];
