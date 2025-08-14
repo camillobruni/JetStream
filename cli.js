@@ -67,25 +67,12 @@ async function runJetStream() {
         await JetStream.initialize();
         await JetStream.start();
     } catch (e) {
-        console.error("JetStream3 failed:", e);
-        const stack = e.stack;
-        if (stack)
-            console.error(stack);
+        console.error("JetStream3 failed: " + e);
+        console.error(e.stack);
         throw e;
     }
 }
-function getAllProperties(obj){
-    var allProps = []
-      , curr = obj
-    do{
-        var props = Object.getOwnPropertyNames(curr)
-        props.forEach(function(prop){
-            if (allProps.indexOf(prop) === -1)
-                allProps.push(prop)
-        })
-    }while(curr = Object.getPrototypeOf(curr))
-    return allProps
-}
+
 load("./JetStreamDriver.js");
 
 if ("--help" in cliFlags) {

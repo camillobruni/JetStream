@@ -813,10 +813,8 @@ class Benchmark {
 
         if (!!this.plan.deterministicRandom)
             scripts.addDeterministicRandom()
-        if (!!this.plan.exposeBrowserTest) {
-            console.log(this.name, "exposeBrowserTest")
+        if (!!this.plan.exposeBrowserTest)
             scripts.addBrowserTest();
-    }
 
         if (this.plan.preload) {
             let preloadCode = "";
@@ -1269,6 +1267,7 @@ class WasmEMCCBenchmark extends AsyncBenchmark {
     get prerunCode() {
         let str = `
             let verbose = false;
+
             let globalObject = this;
 
             abort = quit = function() {
@@ -1276,23 +1275,21 @@ class WasmEMCCBenchmark extends AsyncBenchmark {
                     console.log('Intercepted quit/abort');
             };
 
-            {
-                const oldPrint = globalObject.print;
-                globalObject.print = globalObject.printErr = (...args) => {
-                    if (verbose)
-                        console.log('Intercepted print: ', ...args);
-                };
-
-                let Module = {
-                    preRun: [],
-                    postRun: [],
-                    noInitialRun: true,
-                    print: print,
-                    printErr: printErr
-                };
-
-                globalObject.Module = Module;
+            const oldPrint = globalObject.print;
+            globalObject.print = globalObject.printErr = (...args) => {
+                if (verbose)
+                    console.log('Intercepted print: ', ...args);
             };
+
+            let Module = {
+                preRun: [],
+                postRun: [],
+                noInitialRun: true,
+                print: print,
+                printErr: printErr
+            };
+
+            globalObject.Module = Module;
             ${super.prerunCode};
         `;
 
