@@ -1307,28 +1307,26 @@ class WSLBenchmark extends Benchmark {
 
             const results = [];
             {
-                const benchmark = new Benchmark();
-                const benchmarkName = "${this.name}";
+                const markLabel = benchmarkName + "-stdlib";
+                const startMark = performance.mark(markLabel);
 
                 const start = performance.now();
                 benchmark.buildStdlib();
                 results.push(performance.now() - start);
 
-                    let start = performance.now();
-                    benchmark.buildStdlib();
-                    results.push(performance.now() - start);
+                performance.measure(markLabel, markLabel);
+            }
 
-                    performance.measure(markLabel, markLabel);
-                };
+            {
+                const markLabel = benchmarkName + "-mainRun";
+                const startMark = performance.mark(markLabel);
 
                 const start = performance.now();
                 benchmark.run();
                 results.push(performance.now() - start);
 
-                    let start = performance.now();
-                    benchmark.run();
-                    results.push(performance.now() - start);
-
+                performance.measure(markLabel, markLabel);
+            }
             top.currentResolve(results);
         }`;
     }
