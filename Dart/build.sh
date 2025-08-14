@@ -16,8 +16,6 @@ popd
 
 echo "Copying files from wasm_gc_benchmarks/ into build/" | tee -a "$BUILD_LOG"
 mkdir -p build/ | tee -a "$BUILD_LOG"
-# Generic Dart2wasm runner.
-cp wasm_gc_benchmarks/tools/run_wasm.js build/ | tee -a "$BUILD_LOG"
 # Two Flute benchmark applications: complex and todomvc
 cp wasm_gc_benchmarks/benchmarks-out/flute.complex.dart2wasm.{mjs,wasm} build/ | tee -a "$BUILD_LOG"
 cp wasm_gc_benchmarks/benchmarks-out/flute.todomvc.dart2wasm.{mjs,wasm} build/ | tee -a "$BUILD_LOG"

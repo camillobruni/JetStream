@@ -2008,7 +2008,9 @@ let BENCHMARKS = [
             wasmBinary: "./wasm/HashSet/build/HashSet.wasm",
         },
         iterations: 50,
-        tags: ["Default", "Wasm"],
+        // No longer run by-default: We have more realistic Wasm workloads by
+        // now, and it was over-incentivizing inlining.
+        tags: ["Wasm"],
     }),
     new WasmEMCCBenchmark({
         name: "tsf-wasm",
@@ -2082,6 +2084,11 @@ let BENCHMARKS = [
         },
         iterations: 15,
         worstCaseCount: 2,
+        // Not run by default because the `CupertinoTimePicker` widget is very allocation-heavy,
+        // leading to an unrealistic GC-dominated workload. See
+        // https://github.com/WebKit/JetStream/pull/97#issuecomment-3139924169
+        // The todomvc workload below is less allocation heavy and a replacement for now.
+        // TODO: Revisit, once Dart/Flutter worked on this widget or workload.
         tags: ["Wasm"],
     }),
     new WasmEMCCBenchmark({
