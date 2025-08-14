@@ -7,6 +7,8 @@
 
 globalThis.window ??= globalThis;
 
+isD8 = false;
+
 globalThis.navigator ??= {};
 if (!globalThis.navigator.languages) {
   globalThis.navigator.languages = ['en-US', 'en'];

@@ -561,20 +561,27 @@ const BenchmarkState = Object.freeze({
 class Scripts {
     constructor() {
         this.scripts = [];
+        // Expose a globalThis.JetStream object to the workload. We use
+        // a proxy to prevent prototype access and throw on unknown properties.
         this.add(`
+            const throwOnAccess = (name) => new Proxy({},  {
+                get(target, property, receiver) {
+                    throw new Error(name + "." + property + " is not defined.");
+                }
+            }); 
             globalThis.JetStream = {
-                isInBrowser: ${isInBrowser},
-                isD8: ${isD8},
-                preload: {},
+                __proto__: throwOnAccess("JetStream"),
+                preload: {
+                    __proto__: throwOnAccess("JetStream.preload"),
+                },
             };
-            if (typeof performance.mark === 'undefined') {
-                performance.mark = function(name) { return { name }};
-            }
-            if (typeof performance.measure === 'undefined') {
-                performance.measure = function() {};
-            }
+            `);
+        this.add(`
+            performance.mark ??= function(name) { return { name }};
+            performance.measure ??= function() {};
         `);
     }
+
 
     run() {
         throw new Error("Subclasses need to implement this");
@@ -586,6 +593,13 @@ class Scripts {
 
     addWithURL(url) {
         throw new Error("addWithURL not supported");
+    }
+
+    addBrowserTest() {
+        this.add(`
+            globalThis.JetStream.isInBrowser = ${isInBrowser};
+            globalThis.JetStream.isD8 = ${isD8};
+        `);
     }
 
     addDeterministicRandom() {
@@ -799,6 +813,10 @@ class Benchmark {
 
         if (!!this.plan.deterministicRandom)
             scripts.addDeterministicRandom()
+        if (!!this.plan.exposeBrowserTest) {
+            console.log(this.name, "exposeBrowserTest")
+            scripts.addBrowserTest();
+    }
 
         if (this.plan.preload) {
             let preloadCode = "";
@@ -1763,6 +1781,8 @@ let BENCHMARKS = [
             "./RexBench/UniPoker/benchmark.js",
         ],
         deterministicRandom: true,
+        // FIXME: UniPoker should not access isInBrowser.
+        exposeBrowserTest: true,
         tags: ["Default", "RexBench"],
     }),
     // Simple
@@ -2107,6 +2127,7 @@ let BENCHMARKS = [
         },
         async: true,
         deterministicRandom: true,
+        exposeBrowserTest: true,
         tags: ["Default", "Wasm"],
     }),
     new WasmLegacyBenchmark({
@@ -2127,6 +2148,7 @@ let BENCHMARKS = [
         },
         async: true,
         deterministicRandom: true,
+        exposeBrowserTest: true,
         tags: ["Default", "Wasm"],
     }),
     new WasmEMCCBenchmark({
@@ -2149,6 +2171,7 @@ let BENCHMARKS = [
         files: [
             "./worker/bomb.js",
         ],
+        exposeBrowserTest: true,
         iterations: 80,
         preload: {
             rayTrace3D: "./worker/bomb-subtests/3d-raytrace.js",

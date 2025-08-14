@@ -48,7 +48,7 @@ reportResult(results);
 
 
 let runOfflineAssemblerBenchmark = null;
-if (!JetStream.isInBrowser) {
+if (!isInBrowser) {
     let sources = [
         "benchmark.js"
         , "OfflineAssembler/registers.js"
@@ -74,7 +74,7 @@ const OfflineAssemblerBenchmarkRunner = {
     cells: {}
 };
 
-if (JetStream.isInBrowser) {
+if (isInBrowser) {
     OfflineAssemblerBenchmarkRunner.cells = {
         firstIteration: document.getElementById("OfflineAssemblerFirstIteration"),
         averageWorstCase: document.getElementById("OfflineAssemblerAverageWorstCase"),
