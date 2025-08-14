@@ -96,6 +96,7 @@ if ("--help" in cliFlags) {
     console.log("   --iteration-count:   Set the default iteration count.");
     console.log("   --worst-case-count:  Set the default worst-case count");
     console.log("   --dump-json-results: Print summary json to the console.");
+    console.log("   --dump-test-list:    Print test list instead of running.");
     console.log("   --ramification:      Enable ramification support. See RAMification.py for more details.");
     console.log("   --no-prefetch:       Do not prefetch resources. Will add network overhead to measurements!");
     console.log("");
@@ -110,6 +111,8 @@ if ("--help" in cliFlags) {
     const benchmarkNames = BENCHMARKS.map(b => b.name).sort();
     for (const benchmark of benchmarkNames)
         console.log("  ", benchmark);
+} else if ("--dump-test-list" in cliFlags) {
+    JetStream.dumpTestList();
 } else {
     runJetStream();
 }

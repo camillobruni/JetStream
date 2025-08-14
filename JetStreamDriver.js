@@ -139,14 +139,8 @@ if (isInBrowser) {
     };
 }
 
-function assert(b, m = "") {
-    if (!b)
-        throw new Error(`Bad assertion: ${m}`);
-}
-
-
 function mean(values) {
-    assert(values instanceof Array);
+    console.assert(values instanceof Array);
     let sum = 0;
     for (let x of values)
         sum += x;
@@ -154,13 +148,13 @@ function mean(values) {
 }
 
 function geomeanScore(values) {
-    assert(values instanceof Array);
+    console.assert(values instanceof Array);
     let product = 1;
     for (let x of values)
         product *= x;
     const score = product ** (1 / values.length);
     // Allow 0 for uninitialized subScores().
-    assert(score >= 0, `Got invalid score: ${score}`)
+    console.assert(score >= 0, `Got invalid score: ${score}`)
     return score;
 }
 
@@ -206,7 +200,7 @@ class ShellFileLoader {
     // Cache / memoize previously read files, because some workloads
     // share common code.
     load(url) {
-        assert(!isInBrowser);
+        console.assert(!isInBrowser);
         if (!globalThis.prefetchResources)
             return `load("${url}");`
 
@@ -230,7 +224,7 @@ class Driver {
         // Make benchmark list unique and sort it.
         this.benchmarks = Array.from(new Set(benchmarks));
         this.benchmarks.sort((a, b) => a.plan.name.toLowerCase() < b.plan.name.toLowerCase() ? 1 : -1);
-        assert(this.benchmarks.length, "No benchmarks selected");
+        console.assert(this.benchmarks.length, "No benchmarks selected");
         // TODO: Cleanup / remove / merge `blobDataCache` and `loadCache` vs.
         // the global `fileLoader` cache.
         this.blobDataCache = { };
@@ -290,7 +284,7 @@ class Driver {
         const allScores = [];
         for (const benchmark of this.benchmarks) {
             const score = benchmark.score;
-            assert(score > 0, `Invalid ${benchmark.name} score: ${score}`);
+            console.assert(score > 0, `Invalid ${benchmark.name} score: ${score}`);
             allScores.push(score);
         }
 
@@ -303,13 +297,13 @@ class Driver {
         for (const benchmark of this.benchmarks) {
             for (let [category, value] of Object.entries(benchmark.subScores())) {
                 const arr = categoryScores.get(category);
-                assert(value > 0, `Invalid ${benchmark.name} ${category} score: ${value}`);
+                console.assert(value > 0, `Invalid ${benchmark.name} ${category} score: ${value}`);
                 arr.push(value);
             }
         }
 
         const totalScore = geomeanScore(allScores);
-        assert(totalScore > 0, `Invalid total score: ${totalScore}`);
+        console.assert(totalScore > 0, `Invalid total score: ${totalScore}`);
 
         if (isInBrowser) {
             const summaryElement = document.getElementById("result-summary");
@@ -526,6 +520,13 @@ class Driver {
         }
     }
 
+    dumpTestList()
+    {
+        for (const benchmark of this.benchmarks) {
+            console.log(benchmark.name);
+        }
+    }
+
     async reportScoreToRunBenchmarkRunner()
     {
         if (!isInBrowser)
@@ -631,7 +632,6 @@ class ShellScripts extends Scripts {
         } else
             globalObject = runString("");
 
-        assert(console, "Missing console object");
         globalObject.console = console;
         globalObject.self = globalObject;
         globalObject.top = {
@@ -651,7 +651,7 @@ class ShellScripts extends Scripts {
     }
 
     addWithURL(url) {
-        assert(false, "Should not reach here in CLI");
+        console.assert(false, "Should not reach here in CLI");
     }
 }
 
@@ -734,9 +734,9 @@ class Benchmark {
                 const iterationMarkLabel = benchmarkName + "-iteration-" + i;
                 const iterationStartMark = performance.mark(iterationMarkLabel);
 
-                let start = performance.now();
+                const start = performance.now();
                 benchmark.runIteration(i);
-                let end = performance.now();
+                const end = performance.now();
 
                 performance.measure(iterationMarkLabel, iterationMarkLabel);
 
@@ -812,7 +812,7 @@ class Benchmark {
             scripts.add(prerunCode);
 
         if (!isInBrowser) {
-            assert(this.scripts && this.scripts.length === this.plan.files.length);
+            console.assert(this.scripts && this.scripts.length === this.plan.files.length);
             for (const text of this.scripts)
                 scripts.add(text);
         } else {
@@ -923,12 +923,12 @@ class Benchmark {
     updateCounter() {
         const counter = JetStream.counter;
         ++counter.loadedResources;
-        var statusElement = document.getElementById("status");
+        const statusElement = document.getElementById("status");
         statusElement.innerHTML = `Loading ${counter.loadedResources} of ${counter.totalResources} ...`;
     }
 
     prefetchResourcesForBrowser() {
-        assert(isInBrowser);
+        console.assert(isInBrowser);
 
         const promises = this.plan.files.map((file) => this.loadBlob("file", null, file).then((blobData) => {
                 if (!globalThis.allIsGood)
@@ -961,7 +961,7 @@ class Benchmark {
     }
 
     async retryPrefetchResource(type, prop, file) {
-        assert(isInBrowser);
+        console.assert(isInBrowser);
 
         const counter = JetStream.counter;
         const blobData = JetStream.blobDataCache[file];
@@ -997,7 +997,7 @@ class Benchmark {
     }
 
     async retryPrefetchResourcesForBrowser() {
-        assert(isInBrowser);
+        console.assert(isInBrowser);
 
         const counter = JetStream.counter;
         for (const resource of this.plan.files) {
@@ -1018,12 +1018,12 @@ class Benchmark {
     }
 
     prefetchResourcesForShell() {
-        assert(!isInBrowser);
+        console.assert(!isInBrowser);
 
-        assert(this.scripts === null, "This initialization should be called only once.");
+        console.assert(this.scripts === null, "This initialization should be called only once.");
         this.scripts = this.plan.files.map(file => shellFileLoader.load(file));
 
-        assert(this.preloads === null, "This initialization should be called only once.");
+        console.assert(this.preloads === null, "This initialization should be called only once.");
         this.preloads = Object.entries(this.plan.preload ?? {});
     }
 
@@ -1131,12 +1131,12 @@ class DefaultBenchmark extends Benchmark {
         this.worstCaseCount = getWorstCaseCount(this.plan);
         this.firstIterationTime = null;
         this.firstIterationScore = null;
-        this.worst4Time = null;
-        this.worst4Score = null;
+        this.worstTime = null;
+        this.worstScore = null;
         this.averageTime = null;
         this.averageScore = null;
 
-        assert(this.iterations > this.worstCaseCount);
+        console.assert(this.iterations > this.worstCaseCount);
     }
 
     processResults(results) {
@@ -1148,13 +1148,13 @@ class DefaultBenchmark extends Benchmark {
         results = results.slice(1);
         results.sort((a, b) => a < b ? 1 : -1);
         for (let i = 0; i + 1 < results.length; ++i)
-            assert(results[i] >= results[i + 1]);
+            console.assert(results[i] >= results[i + 1]);
 
         const worstCase = [];
         for (let i = 0; i < this.worstCaseCount; ++i)
             worstCase.push(results[i]);
-        this.worst4Time = mean(worstCase);
-        this.worst4Score = toScore(this.worst4Time);
+        this.worstTime = mean(worstCase);
+        this.worstScore = toScore(this.worstTime);
         this.averageTime = mean(results);
         this.averageScore = toScore(this.averageTime);
     }
@@ -1162,7 +1162,7 @@ class DefaultBenchmark extends Benchmark {
     subScores() {
         return {
             "First": this.firstIterationScore,
-            "Worst": this.worst4Score,
+            "Worst": this.worstScore,
             "Average": this.averageScore,
         };
     }
@@ -1228,9 +1228,9 @@ class AsyncBenchmark extends DefaultBenchmark {
                 const iterationMarkLabel = benchmarkName + "-iteration-" + i;
                 const iterationStartMark = performance.mark(iterationMarkLabel);
 
-                let start = performance.now();
+                const start = performance.now();
                 await benchmark.runIteration(i);
-                let end = performance.now();
+                const end = performance.now();
 
                 performance.measure(iterationMarkLabel, iterationMarkLabel);
 
@@ -1301,15 +1301,18 @@ class WSLBenchmark extends Benchmark {
     }
 
     get runnerCode() {
-        return `
+        return `{
+            const benchmark = new Benchmark();
+            const benchmarkName = "${this.name}";
+
+            const results = [];
             {
                 const benchmark = new Benchmark();
                 const benchmarkName = "${this.name}";
 
-                let results = [];
-                {
-                    const markLabel = benchmarkName + "-stdlib";
-                    const startMark = performance.mark(markLabel);
+                const start = performance.now();
+                benchmark.buildStdlib();
+                results.push(performance.now() - start);
 
                     let start = performance.now();
                     benchmark.buildStdlib();
@@ -1318,19 +1321,16 @@ class WSLBenchmark extends Benchmark {
                     performance.measure(markLabel, markLabel);
                 };
 
-                {
-                    const markLabel = benchmarkName + "-mainRun";
-                    const startMark = performance.mark(markLabel);
+                const start = performance.now();
+                benchmark.run();
+                results.push(performance.now() - start);
 
                     let start = performance.now();
                     benchmark.run();
                     results.push(performance.now() - start);
 
-                    performance.measure(markLabel, markLabel);
-                };
-
-                top.currentResolve(results);
-            };`;
+            top.currentResolve(results);
+        }`;
     }
 
     subScores() {
