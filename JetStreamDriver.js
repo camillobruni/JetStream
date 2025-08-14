@@ -1401,21 +1401,19 @@ class WasmLegacyBenchmark extends Benchmark {
                     console.log('Intercepted quit/abort');
             };
 
-            {
-                const oldConsoleLog = globalObject.console.log;
-                globalObject.print = globalObject.printErr = (...args) => {
-                    if (verbose)
-                        oldConsoleLog('Intercepted print: ', ...args);
-                };
-
-                let Module = {
-                    preRun: [],
-                    postRun: [],
-                    print: globalObject.print,
-                    printErr: globalObject.print
-                };
-                globalObject.Module = Module;
+            const oldConsoleLog = globalObject.console.log;
+            globalObject.print = globalObject.printErr = (...args) => {
+                if (verbose)
+                    oldConsoleLog('Intercepted print: ', ...args);
             };
+
+            let Module = {
+                preRun: [],
+                postRun: [],
+                print: globalObject.print,
+                printErr: globalObject.print
+            };
+            globalObject.Module = Module;
         `;
         return str;
     }
