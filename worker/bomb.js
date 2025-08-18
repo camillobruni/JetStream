@@ -27,35 +27,50 @@ const NUM_WORKERS = 25;
 
 const MAX_CONCURRENCY_STARTUP = 8;
 const MAX_CONCURRENT_RUNNING = 16;
+let resolve = null;
+
+let numWorkers = 0;
+function startWorker(file) {
+    numWorkers++;
+    let worker = new Worker(file);
+    worker.onmessage = function(event) {
+        if (event.data === "done") {
+            --numWorkers;
+            if (!numWorkers)
+                resolve();
+        }
+    };
+}
 
 const WORKER_SUB_TESTS = [
-    rayTrace3D,
-    accessNbody,
-    morph3D,
-    cube3D,
-    accessFunnkuch,
-    accessBinaryTrees,
-    accessNsieve,
-    bitopsBitwiseAnd,
-    bitopsNsieveBits,
-    controlflowRecursive,
-    bitops3BitBitsInByte,
-    botopsBitsInByte,
-    cryptoAES,
-    cryptoMD5,
-    cryptoSHA1,
-    dateFormatTofte,
-    dateFormatXparb,
-    mathCordic,
-    mathPartialSums,
-    mathSpectralNorm,
-    stringBase64,
-    stringFasta,
-    stringValidateInput,
-    stringTagcloud,
-    stringUnpackCode,
-    regexpDNA,
+    JetStream.preload.rayTrace3D,
+    JetStream.preload.accessNbody,
+    JetStream.preload.morph3D,
+    JetStream.preload.cube3D,
+    JetStream.preload.accessFunnkuch,
+    JetStream.preload.accessBinaryTrees,
+    JetStream.preload.accessNsieve,
+    JetStream.preload.bitopsBitwiseAnd,
+    JetStream.preload.bitopsNsieveBits,
+    JetStream.preload.controlflowRecursive,
+    JetStream.preload.bitops3BitBitsInByte,
+    JetStream.preload.botopsBitsInByte,
+    JetStream.preload.cryptoAES,
+    JetStream.preload.cryptoMD5,
+    JetStream.preload.cryptoSHA1,
+    JetStream.preload.dateFormatTofte,
+    JetStream.preload.dateFormatXparb,
+    JetStream.preload.mathCordic,
+    JetStream.preload.mathPartialSums,
+    JetStream.preload.mathSpectralNorm,
+    JetStream.preload.stringBase64,
+    JetStream.preload.stringFasta,
+    JetStream.preload.stringValidateInput,
+    JetStream.preload.stringTagcloud,
+    JetStream.preload.stringUnpackCode,
+    JetStream.preload.regexpDNA,
 ];
+
 
 class Benchmark {
     workers = [];
@@ -72,7 +87,7 @@ class Benchmark {
     }
 
     async startWorkers() {
-        if (!isInBrowser)
+        if (!JetStream.isInBrowser)
             throw new Error("Only works in browser");
         let testIndex = 0;
         while (this.workers.length < NUM_WORKERS) {
