@@ -1,5 +1,7 @@
 import { makeObservable, observable, computed, action } from 'mobx';
 
+const MAX_ROOM_UPDATES = 10;
+
 export class Room {
     name;
     people = new Map();
@@ -66,6 +68,8 @@ export class Room {
 
     addStatusUpdate(person, status) {
         this.roomUpdates.push(`${person.name} is now ${status}`);
+        if (this.roomUpdates.length > MAX_ROOM_UPDATES * 2)
+            this.roomUpdates = this.roomUpdates.slice(MAX_ROOM_UPDATES);
     }
 
     dispose(notifications) {
