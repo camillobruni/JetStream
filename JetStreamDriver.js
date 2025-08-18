@@ -2522,6 +2522,15 @@ let BENCHMARKS = [
         iterations: 15,
         worstCaseCount: 2,
         tags: ["Default", "Wasm", "dotnet"],
+    }),
+    new AsyncBenchmark({
+        name: "intl",
+        files: [
+            "./intl/benchmark.js",
+        ],
+        iterations: 15,
+        worstCaseCount: 2,
+        tags: ["Default", "Javascript", "int"],
     })
 ];
 
