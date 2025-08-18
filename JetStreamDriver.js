@@ -2083,6 +2083,16 @@ let BENCHMARKS = [
         deterministicRandom: true,
         tags: ["Default", "ThreeJs"],
     }),
+    new AsyncBenchmark({
+        name: "mobx-startup",
+        files: [
+            "./mobx/benchmark.js",
+        ],
+        preload:{
+            BUNDLE: "./mobx/dist/bundle.es6.min.js",
+        },
+        tags: ["Default", "mobx", "startup"],
+    }),
     // Wasm
     new WasmEMCCBenchmark({
         name: "HashSet-wasm",
