@@ -2523,16 +2523,38 @@ let BENCHMARKS = [
         worstCaseCount: 2,
         tags: ["Default", "Wasm", "dotnet"],
     }),
-    new AsyncBenchmark({
-        name: "intl",
+
+];
+
+
+const INTL_TESTS = [
+    "DateTimeFormat",
+    "ListFormat",
+    "RelativeTimeFormat",
+    "NumberFormat",
+    "PluralRules",
+];
+const INTL_BENCHMARKS = [];
+for (const test of INTL_TESTS) {
+    const benchmark = new AsyncBenchmark({
+        name: `${test}-intl`,
         files: [
+            "./intl/src/helper.js",
+            `./intl/src/${test}.js`,
             "./intl/benchmark.js",
         ],
         iterations: 15,
         worstCaseCount: 2,
-        tags: ["Default", "Javascript", "int"],
-    })
-];
+        tags: ["Javascript", "int"],
+    });
+    INTL_BENCHMARKS.push(benchmark);
+}
+BENCHMARKS.push(
+    new GroupedBenchmark({
+            name: "intl",
+            tags: ["Default", "Javascript", "int"],
+        }, INTL_BENCHMARKS));
+
 
 
 // SunSpider tests
