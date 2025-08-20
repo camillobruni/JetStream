@@ -2545,14 +2545,14 @@ for (const test of INTL_TESTS) {
         ],
         iterations: 15,
         worstCaseCount: 2,
-        tags: ["Javascript", "int"],
+        tags: ["Javascript", "intl"],
     });
     INTL_BENCHMARKS.push(benchmark);
 }
 BENCHMARKS.push(
     new GroupedBenchmark({
             name: "intl",
-            tags: ["Default", "Javascript", "int"],
+            tags: ["Default", "Javascript", "intl"],
         }, INTL_BENCHMARKS));
 
 
