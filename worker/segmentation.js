@@ -125,7 +125,7 @@ var Statistics = new (function () {
         var sumOfSampleVarianceOverSampleSize = stat1.variance / stat1.size + stat2.variance / stat2.size;
         var t = Math.abs((stat1.mean - stat2.mean) / Math.sqrt(sumOfSampleVarianceOverSampleSize));
 
-        // http://en.wikipedia.org/wiki/Welch–Satterthwaite_equation
+        // http://en.wikipedia.org/wiki/Welch-Satterthwaite_equation
         var degreesOfFreedom = sumOfSampleVarianceOverSampleSize * sumOfSampleVarianceOverSampleSize
             / (stat1.variance * stat1.variance / stat1.size / stat1.size / stat1.degreesOfFreedom
                 + stat2.variance * stat2.variance / stat2.size / stat2.size / stat2.degreesOfFreedom);
@@ -560,7 +560,7 @@ class AsyncTaskWorker {
 
     constructor()
     {
-        this._webWorker = new Worker(asyncTaskBlob);
+        this._webWorker = new Worker(JetStream.preload.asyncTaskBlob);
         this._webWorker.onmessage = this._didRecieveMessage.bind(this);
         this._id = AsyncTaskWorker._workerId;
         this._startTime = Date.now();
