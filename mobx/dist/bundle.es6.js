@@ -884,7 +884,7 @@ const person=this.people.get(personId);person&&(person.removeRoom(this),this.peo
 /*ThouShaltNotCache*/
 this.messages.push(message),message.author.setLastMessage(message)}addStatusUpdate(person,status){
 /*ThouShaltNotCache*/
-this.roomUpdates.push(`${person.name} is now ${status}`)}dispose(notifications){
+this.roomUpdates.push(`${person.name} is now ${status}`),this.roomUpdates.length>20&&(this.roomUpdates=this.roomUpdates.slice(10))}dispose(notifications){
 /*ThouShaltNotCache*/
 this.people.forEach(person=>person.removeRoom(this)),notifications&&notifications.removeRoom(this.name)}}class Message{static _nextId=0;id;text;author;timestamp;static nextId(){
 /*ThouShaltNotCache*/
