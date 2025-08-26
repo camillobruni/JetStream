@@ -1,7 +1,7 @@
 const path = require("path");
 const webpack = require("webpack");
 const TerserPlugin = require("terser-webpack-plugin");
-const CacheBusterCommentPlugin = require("./build/cache-buster-comment-plugin.cjs");
+const CacheBusterCommentPlugin = require("../startup-helper/BabelCacheBuster.mjs");
 
 function config({ filename, minify, target }) {
   return {

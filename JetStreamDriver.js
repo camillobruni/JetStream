@@ -2086,6 +2086,7 @@ let BENCHMARKS = [
     new AsyncBenchmark({
         name: "mobx-startup",
         files: [
+            "./startup-helper/StartupBenchmark.js",
             "./mobx/benchmark.js",
         ],
         preload:{
