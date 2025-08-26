@@ -2548,8 +2548,9 @@ for (const test of INTL_TESTS) {
             `./intl/src/${test}.js`,
             "./intl/benchmark.js",
         ],
-        iterations: 15,
-        worstCaseCount: 2,
+        iterations: 2,
+        worstCaseCount: 1,
+        deterministicRandom: true,
         tags: ["Javascript", "intl"],
     });
     INTL_BENCHMARKS.push(benchmark);

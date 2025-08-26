@@ -36,5 +36,5 @@ function runTest() {
       }
     }
   }
-  return {lastResult, totalLength};
+  return { lastResult, totalLength, expectedLength: 508496 };
 }

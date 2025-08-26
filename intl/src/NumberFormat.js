@@ -1,12 +1,4 @@
-
-
-const CURRENCIES = [
-  "USD",
-  "EUR",
-  "JPY",
-  "INR",
-  "NGN",
-];
+const CURRENCIES = ["USD", "EUR", "JPY", "INR", "NGN"];
 
 const NUMBER_UNITS = [
   "acre",
@@ -80,10 +72,12 @@ function runTest() {
   let lastResult;
   let totalLength = 0;
   const NUMBER_FORMAT_COUNT = 10;
+  let counter = 1;
   for (const options of shuffleOptions(numberFormatOptions).slice(0, 200)) {
     const formatter = new Intl.NumberFormat(options.locale, options);
     for (let i = 0; i < NUMBER_FORMAT_COUNT; i++) {
-      const value = Math.random() * 10_000;
+      counter += 599;
+      const value = counter % 10_000;
       lastResult = formatter.format(value);
       totalLength += lastResult.length;
       const formatPartsResult = formatter.formatToParts(value);
@@ -92,5 +86,5 @@ function runTest() {
       }
     }
   }
-  return {lastResult, totalLength};
+  return { lastResult, totalLength, expectedLength: 40988 };
 }

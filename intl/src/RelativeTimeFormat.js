@@ -21,6 +21,8 @@ function* relativeTimeFormatOptions() {
   }
 }
 
+
+
 function runTest() {
   let lastResult;
   let totalLength = 0;
@@ -42,5 +44,5 @@ function runTest() {
       }
     }
   }
-  return {lastResult, totalLength};
+  return { lastResult, totalLength, expectedLength: 434328 };
 }

@@ -1,4 +1,3 @@
-
 function generateRandomDates(count) {
   const firstDate = new Date(1800, 11, 5, 13, 6);
   let currentTimeStamp = firstDate.getTime();
@@ -59,5 +58,9 @@ function runTest() {
       dateRangeStart = date;
     }
   }
-  return {lastResult: lastFormatResult + lastFormatRangeResult, totalLength};
+  return {
+    lastResult: lastFormatResult + lastFormatRangeResult,
+    totalLength,
+    expectedLength: 442105,
+  };
 }

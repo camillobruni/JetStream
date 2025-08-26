@@ -1,4 +1,3 @@
-
 function* pluralRulesOptions() {
   const typeOptions = ["cardinal", "ordinal"];
   for (const locale of LOCALES) {
@@ -26,5 +25,5 @@ function runTest() {
       totalLength += lastResult.length;
     }
   }
-  return {lastResult, totalLength};
+  return { lastResult, totalLength, expectedLength: 244941 };
 }
