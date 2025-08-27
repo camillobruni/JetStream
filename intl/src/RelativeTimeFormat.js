@@ -32,11 +32,14 @@ function runTest() {
     relativeTimeFormatOptions
   )) {
     const formatter = new Intl.RelativeTimeFormat(locale, { style, numeric });
+    console.log(style, numeric);
     for (let i = 0; i < RELATIVE_TIME_FORMAT_COUNT; i++) {
       const unit = UNITS[unitIndex % UNITS.length];
       unitIndex++;
       const value = Math.random() * 100 - 50;
+      console.log(value, unit);
       lastResult = formatter.format(value, unit);
+      console.log(lastResult);
       totalLength += lastResult.length;
       const formatPartsResult = formatter.formatToParts(value, unit);
       for (const part of formatPartsResult) {

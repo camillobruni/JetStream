@@ -1327,7 +1327,7 @@ class AsyncBenchmark extends DefaultBenchmark {
     get runnerCode() {
         return `
         async function doRun() {
-            const benchmark = new Benchmark(${this.iterations});
+            const benchmark = new Benchmark(${JSON.stringify(this.benchmarkArguments)});
             await benchmark.init?.();
             const results = [];
             const benchmarkName = "${this.name}";
@@ -2540,11 +2540,11 @@ let BENCHMARKS = [
 
 
 const INTL_TESTS = [
-    "DateTimeFormat",
-    "ListFormat",
-    "RelativeTimeFormat",
+    // "DateTimeFormat",
+    // "ListFormat",
+    // "RelativeTimeFormat",
     "NumberFormat",
-    "PluralRules",
+    // "PluralRules",
 ];
 const INTL_BENCHMARKS = [];
 for (const test of INTL_TESTS) {

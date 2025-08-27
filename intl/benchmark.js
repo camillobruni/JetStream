@@ -29,7 +29,7 @@ class Benchmark {
   totalLength = 0;
   expectedLength = 0;
 
-  constructor(iterationCount) {
+  constructor({ iterationCount }) {
     this.iterationCount = iterationCount;
   }
 
@@ -39,12 +39,13 @@ class Benchmark {
     this.lastResult = lastResult;
     this.totalLength += totalLength;
     this.expectedLength = expectedLength;
+    console.log(this.totalLength, this.expectedLength)
   }
 
   validate() {
     const expectedTotalLength = this.expectedLength * this.iterationCount;
     console.assert(
-      this.totalLength == expectedTotalLength,
+      this.totalLength === expectedTotalLength,
       `Invalid totalLength = ${this.totalLength}, expected ${expectedTotalLength}`
     );
   }

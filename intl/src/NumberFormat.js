@@ -75,10 +75,12 @@ function runTest() {
   let counter = 1;
   for (const options of shuffleOptions(numberFormatOptions).slice(0, 200)) {
     const formatter = new Intl.NumberFormat(options.locale, options);
+    console.log(options.locale, JSON.stringify(options))
     for (let i = 0; i < NUMBER_FORMAT_COUNT; i++) {
       counter += 599;
       const value = counter % 10_000;
       lastResult = formatter.format(value);
+      console.log(value, lastResult, )
       totalLength += lastResult.length;
       const formatPartsResult = formatter.formatToParts(value);
       for (const part of formatPartsResult) {
