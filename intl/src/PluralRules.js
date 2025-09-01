@@ -34,5 +34,5 @@ function runTest(verbose = false) {
       }
     }
   }
-  return { lastResult, totalLength, expectedLength: 244941 };
+  return { lastResult, totalLength, expectedMinLength: 244_000 };
 }

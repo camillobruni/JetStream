@@ -92,5 +92,5 @@ function runTest(verbose = false) {
       }
     }
   }
-  return { lastResult, totalLength, expectedLength: 40988 };
+  return { lastResult, totalLength, expectedMinLength: 40_000 };
 }

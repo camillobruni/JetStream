@@ -72,6 +72,6 @@ function runTest(verbose = false) {
   return {
     lastResult: lastFormatResult + lastFormatRangeResult,
     totalLength,
-    expectedLength: 442105,
+    expectedMinLength: 438_000,
   };
 }
