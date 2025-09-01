@@ -21,9 +21,7 @@ function* relativeTimeFormatOptions() {
   }
 }
 
-
-
-function runTest() {
+function runTest(verbose = false) {
   let lastResult;
   let totalLength = 0;
   const RELATIVE_TIME_FORMAT_COUNT = 100;
@@ -31,15 +29,19 @@ function runTest() {
   for (const { locale, style, numeric } of shuffleOptions(
     relativeTimeFormatOptions
   )) {
-    const formatter = new Intl.RelativeTimeFormat(locale, { style, numeric });
-    console.log(style, numeric);
+    const options = { style, numeric };
+    if (verbose) {
+      console.log(locale, JSON.stringify(options));
+    }
+    const formatter = new Intl.RelativeTimeFormat(locale, options);
     for (let i = 0; i < RELATIVE_TIME_FORMAT_COUNT; i++) {
       const unit = UNITS[unitIndex % UNITS.length];
       unitIndex++;
       const value = Math.random() * 100 - 50;
-      console.log(value, unit);
       lastResult = formatter.format(value, unit);
-      console.log(lastResult);
+      if (verbose) {
+        console.log(value, unit, lastResult);
+      }
       totalLength += lastResult.length;
       const formatPartsResult = formatter.formatToParts(value, unit);
       for (const part of formatPartsResult) {

@@ -23,7 +23,7 @@ function* dateTimeFormatOptions() {
   }
 }
 
-function runTest() {
+function runTest(verbose = false) {
   let totalLength = 0;
   let lastFormatResult;
   let lastFormatPartResult;
@@ -36,11 +36,18 @@ function runTest() {
   for (const { locale, dateStyle, timeStyle } of shuffleOptions(
     dateTimeFormatOptions
   )) {
-    const formatter = new Intl.DateTimeFormat(locale, { dateStyle, timeStyle });
+    const options = { dateStyle, timeStyle };
+    if (verbose) {
+      console.log(locale, JSON.stringify(options));
+    }
+    const formatter = new Intl.DateTimeFormat(locale, options);
     for (let i = 0; i < FORMAT_COUNT; i++) {
       let date = dates[dateIndex % dates.length];
       lastFormatResult = formatter.format(date);
       totalLength += lastFormatResult.length;
+      if (verbose) {
+        console.log(date, lastFormatResult);
+      }
       dateIndex++;
 
       date = dates[dateIndex % dates.length];
@@ -53,8 +60,12 @@ function runTest() {
     let dateRangeStart = dates[0];
     for (let i = 0; i < FORMAT_RANGE_COUNT; i++) {
       const date = dates[dateIndex % dates.length];
-      if (dateRangeStart < date)
+      if (dateRangeStart < date) {
         lastFormatRangeResult = formatter.formatRange(dateRangeStart, date);
+        if (verbose) {
+          console.log(dateRangeStart, date, lastFormatRangeResult);
+        }
+      }
       dateRangeStart = date;
     }
   }

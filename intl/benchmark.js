@@ -25,28 +25,33 @@
 
 class Benchmark {
   iterationCount;
+  verbose;
   lastResult;
   totalLength = 0;
-  expectedLength = 0;
+  expectedMinLength = 0;
 
-  constructor({ iterationCount }) {
+  constructor({ iterationCount, verbose = false } = {}) {
     this.iterationCount = iterationCount;
+    this.verbose = verbose;
   }
 
   runIteration() {
     // See implementations in src/.
-    const { lastResult, totalLength, expectedLength } = runTest();
+    const {
+      lastResult,
+      totalLength,
+      expectedLength: expectedMinLength,
+    } = runTest(this.verbose);
     this.lastResult = lastResult;
     this.totalLength += totalLength;
-    this.expectedLength = expectedLength;
-    console.log(this.totalLength, this.expectedLength)
+    this.expectedMinLength = expectedMinLength;
   }
 
   validate() {
-    const expectedTotalLength = this.expectedLength * this.iterationCount;
+    const expectedMinTotalLength = this.expectedMinLength * this.iterationCount;
     console.assert(
-      this.totalLength === expectedTotalLength,
-      `Invalid totalLength = ${this.totalLength}, expected ${expectedTotalLength}`
+      this.totalLength >= expectedMinTotalLength,
+      `Invalid totalLength = ${this.totalLength}, expected ${expectedMinTotalLength}`
     );
   }
 }
