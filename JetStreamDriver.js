@@ -2540,11 +2540,11 @@ let BENCHMARKS = [
 
 
 const INTL_TESTS = [
-    // "DateTimeFormat",
-    // "ListFormat",
-    // "RelativeTimeFormat",
+    "DateTimeFormat",
+    "ListFormat",
+    "RelativeTimeFormat",
     "NumberFormat",
-    // "PluralRules",
+    "PluralRules",
 ];
 const INTL_BENCHMARKS = [];
 for (const test of INTL_TESTS) {
@@ -2565,7 +2565,7 @@ for (const test of INTL_TESTS) {
 BENCHMARKS.push(
     new GroupedBenchmark({
             name: "intl",
-            tags: ["Default", "Javascript", "intl"],
+            tags: ["Javascript", "intl"],
         }, INTL_BENCHMARKS));
 
 
