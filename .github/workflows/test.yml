@@ -1,51 +1,83 @@
-name: CI
+name: Cross-Browser CI
 
 on:
-    push:
-        branches: ["main"]
-    pull_request:
-        branches: ["main"]
-
-    # Allows you to run this workflow manually from the Actions tab
-    workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
-    build:
-        name: Build
-        runs-on: macos-latest
-        env:
-            GITHUB_ACTIONS_OUTPUT: ""
-        strategy:
-            fail-fast: false
-            matrix:
-                browser: [chrome, firefox, jsc, safari, spidermonkey, v8]
-        steps:
-            - name: Extract Week Number
-              run: echo "WEEK_NUMBER=$(date +%W)" >> $GITHUB_ENV
+  prepare:
+    name: Prepare Environment
+    runs-on: macos-latest
+    outputs:
+      week_number: ${{ steps.extract_week.outputs.WEEK_NUMBER }}
+    steps:
+      - name: Extract Week Number (Setup cache key)
+        id: extract_week
+        run: echo "WEEK_NUMBER=$(date +%W)" >> $GITHUB_OUTPUT
+      
+      - name: Cache Node Packages (Save only)
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      
+      - name: Checkout Branch
+        uses: actions/checkout@v4
+        
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          cache: npm
 
-            - name: Install Firefox
-              if: ${{ matrix.browser == 'firefox' }}
-              run: brew install --cask firefox
+      - name: Install Node Packages (npm ci)
+        # Only runs if cache misses
+        run: npm ci
 
-            - name: Checkout Branch
-              uses: actions/checkout@v4
+  test:
+    name: Test ${{ matrix.browser }}
+    needs: prepare 
+    runs-on: macos-latest
+    env:
+      WEEK_NUMBER: ${{ needs.prepare.outputs.week_number }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox, jsc, safari, spidermonkey, v8]
+        
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version-file: package.json
-                  cache: npm
+      - name: Restore Node Packages Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
-            - name: Install Node Packages
-              run: npm ci
+      - name: Install Firefox (via Homebrew)
+        if: ${{ matrix.browser == 'firefox' }}
+        run: brew install --cask firefox
 
-            - name: Cache jsvu Binaries 
-              uses: actions/cache@v4
-              with:
-                path: ~/.jsvu
-                key: ${{ runner.os }}-jsvu-${{ matrix.browser }}-week-${{ env.WEEK_NUMBER }}
-
-            - name: Run Tests
-              run: |
-                  echo "Running in $BROWSER"
-                  npm run test:${{ matrix.browser }}
+      - name: Cache jsvu Binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.jsvu
+          key: ${{ runner.os }}-jsvu-${{ matrix.browser }}-week-${{ env.WEEK_NUMBER }}
+          restore-keys: |
+            ${{ runner.os }}-jsvu-${{ matrix.browser }}-week-
+            
+      - name: Run Tests and Build
+        run: |
+          echo "Running tests for ${{ matrix.browser }}"
+          npm run test:${{ matrix.browser }}
+          
+          echo "Running build test for ${{ matrix.browser }}"
+          # Assuming build test is required for every browser
+          npm run test:build
