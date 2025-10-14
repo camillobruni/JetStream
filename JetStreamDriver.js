@@ -328,8 +328,6 @@ class Driver {
         for (const benchmark of this.benchmarks)
             text += benchmark.renderHTML();
 
-        const timestamp = performance.now();
-        document.getElementById('jetstreams').style.backgroundImage = `url('jetstreams.svg?${timestamp}')`;
         const resultsTable = document.getElementById("results");
         resultsTable.innerHTML = text;
 
