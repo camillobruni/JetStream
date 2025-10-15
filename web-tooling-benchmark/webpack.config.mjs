@@ -99,7 +99,7 @@ export default async (env) => {
       optimization: {
         minimize: false,
       },
-      mode: "none"
+      mode: "development"
     });
   }
 
