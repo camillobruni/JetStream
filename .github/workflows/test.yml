@@ -31,7 +31,7 @@ jobs:
               if: ${{ matrix.browser == 'safari' }}
               run: |
                 sudo safaridriver --enable
-                sleep 1
+                sleep 2
 
             - name: Checkout Branch
               uses: actions/checkout@v4
