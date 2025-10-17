@@ -27,6 +27,12 @@ jobs:
               if: ${{ matrix.browser == 'firefox' }}
               run: brew install --cask firefox
 
+            - name: Enable Safari Driver
+              if: ${{ matrix.browser == 'safari' }}
+              run: |
+                sudo safaridriver --enable
+                sleep 2
+
             - name: Checkout Branch
               uses: actions/checkout@v4
 
