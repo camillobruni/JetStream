@@ -50,7 +50,7 @@
 
     async function initialize() {
         if (JetStreamParams.startDelay === undefined) {
-            blowJetStreams()
+            playIntro()
         }
         if (globalThis.allIsGood) {
             try {
@@ -68,7 +68,8 @@
         }
     }
 
-    function blowJetStreams() {
+    function playIntro() {
+        document.body.classList.add("animateUI");
         const timestamp = performance.now();
         document.getElementById('jetstreams').style.backgroundImage = `url('jetstreams.svg?${timestamp}')`;
     }
