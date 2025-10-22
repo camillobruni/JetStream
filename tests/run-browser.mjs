@@ -92,7 +92,7 @@ async function testEnd2End(params) {
             iterationCount: 3 
         }, params);
     let results;
-    let success = false;
+    let success = true;
     try {
         const url = new URL(`http://localhost:${PORT}/index.html`);
         url.search = new URLSearchParams(urlParams).toString();
@@ -108,9 +108,9 @@ async function testEnd2End(params) {
                 callback();
         });
         results = await benchmarkResults(driver);
-        success = true;
         // FIXME: validate results;
     } catch(e) {
+        success = false;
         throw e;
     } finally {
         await driver.quit();
