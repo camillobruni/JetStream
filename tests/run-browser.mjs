@@ -15,7 +15,6 @@ const optionDefinitions = [
     { name: "help", alias: "h", description: "Print this help text." },
 ];
 
-
 const options = commandLineArgs(optionDefinitions);
 
 if ("help" in options)
@@ -58,10 +57,8 @@ process.once("uncaughtException", (err) => {
     process.exit(1);
 });
 
-
 const PORT = options.port;
 const server = await serve(PORT);
-
 
 async function runTests() {
     let success = true;
@@ -174,11 +171,9 @@ function logIncrementalResult(previousResults, benchmarkResults) {
     }
 }
 
-
 function printLogs(sessionId) {
     if (BROWSER === "safari" && sessionId)
         return printSafariLogs(sessionId);
-
 }
 
 async function printSafariLogs(sessionId) {
