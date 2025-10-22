@@ -1,6 +1,8 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import TerserPlugin from "terser-webpack-plugin";
+import { LicenseFilePlugin } from "generate-license-file-webpack-plugin";
+
 import CacheBusterCommentPlugin from "../startup-helper/BabelCacheBuster.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,7 +28,6 @@ function config({ filename, minify, target }) {
       rules: [
         {
           test: /\.m?js$/,
-          include: /.*/,
           use: {
             loader: "babel-loader",
             options: {
@@ -36,6 +37,9 @@ function config({ filename, minify, target }) {
         },
       ],
     },
+    plugins: [new LicenseFilePlugin({
+      outputFileName: "LICENSE.txt",
+    })],
     optimization: {
       minimizer: [
         new TerserPlugin({
