@@ -104,7 +104,7 @@ async function testEnd2End(params) {
     } catch(e) {
         throw e;
     } finally {
-        driver.quit();
+        await driver.quit();
     }
 }
 
