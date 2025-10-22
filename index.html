@@ -49,6 +49,9 @@
     }
 
     async function initialize() {
+        if (JetStreamParams.startDelay === undefined) {
+            blowJetStreams()
+        }
         if (globalThis.allIsGood) {
             try {
                 await JetStream.initialize();
@@ -63,6 +66,11 @@
             statusElement.classList.add('error');
             statusElement.innerHTML = "<h2>ERROR</h2><p>Errors were encountered during page load. Refusing to run a partial benchmark suite.</p>";
         }
+    }
+
+    function blowJetStreams() {
+        const timestamp = performance.now();
+        document.getElementById('jetstreams').style.backgroundImage = `url('jetstreams.svg?${timestamp}')`;
     }
     </script>
 
