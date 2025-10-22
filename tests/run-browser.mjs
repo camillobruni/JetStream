@@ -110,6 +110,8 @@ async function testEnd2End(params) {
         results = await benchmarkResults(driver);
         success = true;
         // FIXME: validate results;
+    } catch(e) {
+        throw e;
     } finally {
         await driver.quit();
         if (!success) {
