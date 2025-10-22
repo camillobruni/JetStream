@@ -125,10 +125,12 @@ async function benchmarkResults(driver) {
         globalThis.JetStream.start();
         callback();
     });
+
     await new Promise((resolve, reject) => pollResultsUntilDone(driver, resolve, reject));
     const resultsJSON = await driver.executeScript(() => {
         return globalThis.JetStream.resultsJSON();
     });
+
     return JSON.parse(resultsJSON);
 }
 
