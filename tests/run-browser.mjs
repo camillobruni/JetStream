@@ -1,8 +1,12 @@
 #! /usr/bin/env node
 /* eslint-disable-next-line  no-unused-vars */
 import serve from "./server.mjs";
-import { Builder, Capabilities } from "selenium-webdriver";
+import { Builder, Capabilities, logging } from "selenium-webdriver";
 import commandLineArgs from "command-line-args";
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
+import { glob } from "glob";
 
 import {logInfo, logError, printHelp, runTest} from "./helper.mjs";
 
@@ -26,6 +30,7 @@ let capabilities;
 switch (BROWSER) {
     case "safari":
         capabilities = Capabilities.safari();
+        capabilities.set("safari:diagnose", true);
         break;
 
     case "firefox": {
@@ -54,8 +59,10 @@ process.once("uncaughtException", (err) => {
     process.exit(1);
 });
 
+
 const PORT = options.port;
 const server = await serve(PORT);
+
 
 async function runTests() {
     let success = true;
@@ -78,6 +85,7 @@ async function runEnd2EndTest(name, params) {
 
 async function testEnd2End(params) {
     const driver = await new Builder().withCapabilities(capabilities).build();
+    const sessionId = (await driver.getSession()).getId();
     const driverCapabilities = await driver.getCapabilities();
     logInfo(`Browser: ${driverCapabilities.getBrowserName()} ${driverCapabilities.getBrowserVersion()}`);
     const urlParams = Object.assign({
@@ -85,6 +93,7 @@ async function testEnd2End(params) {
             iterationCount: 3 
         }, params);
     let results;
+    let success = false;
     try {
         const url = new URL(`http://localhost:${PORT}/index.html`);
         url.search = new URLSearchParams(urlParams).toString();
@@ -100,11 +109,13 @@ async function testEnd2End(params) {
                 callback();
         });
         results = await benchmarkResults(driver);
+        success = true;
         // FIXME: validate results;
-    } catch(e) {
-        throw e;
     } finally {
         await driver.quit();
+        if (!success) {
+            await printLogs(sessionId);
+        }
     }
 }
 
@@ -115,7 +126,6 @@ async function benchmarkResults(driver) {
         globalThis.JetStream.start();
         callback();
     });
-
     await new Promise((resolve, reject) => pollResultsUntilDone(driver, resolve, reject));
     const resultsJSON = await driver.executeScript(() => {
         return globalThis.JetStream.resultsJSON();
@@ -128,7 +138,6 @@ class JetStreamTestError extends Error {
         super(`Tests failed: ${errors.map(e => e.stack).join(", ")}`);
         this.errors = errors;
     }
-
 }
 
 const UPDATE_INTERVAL = 250;
@@ -160,6 +169,32 @@ function logIncrementalResult(previousResults, benchmarkResults) {
             continue;
         console.log(testName, testResults);
         previousResults.add(testName);
+    }
+}
+
+
+function printLogs(sessionId) {
+    if (BROWSER === "safari" && sessionId)
+        return printSafariLogs(sessionId);
+
+}
+
+async function printSafariLogs(sessionId) {
+    const sessionLogDir = path.join(os.homedir(), "Library", "Logs", "com.apple.WebDriver", sessionId);
+    try {
+        const files = await fs.readdir(sessionLogDir);
+        const logFiles = files.filter(f => f.startsWith("safaridriver.") && f.endsWith(".txt"));
+        if (logFiles.length === 0) {
+            logInfo(`No safaridriver log files found in session directory: ${sessionLogDir}`);
+            return;
+        }
+        for (const file of logFiles) {
+            const logPath = path.join(sessionLogDir, file);
+            const logContent = await fs.readFile(logPath, "utf8");
+            logGroup(`SafariDriver Log: ${file}`, () => console.log(logContent));
+        }
+    } catch (err) {
+        logError("Error reading SafariDriver logs:", err);
     }
 }
 
