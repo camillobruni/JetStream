@@ -6,7 +6,6 @@ import commandLineArgs from "command-line-args";
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
-import { glob } from "glob";
 
 import {logInfo, logError, printHelp, runTest} from "./helper.mjs";
 
