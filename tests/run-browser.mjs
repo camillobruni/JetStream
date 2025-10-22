@@ -132,7 +132,6 @@ async function benchmarkResults(driver) {
     const resultsJSON = await driver.executeScript(() => {
         return globalThis.JetStream.resultsJSON();
     });
-
     return JSON.parse(resultsJSON);
 }
 
