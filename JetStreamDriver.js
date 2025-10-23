@@ -2253,6 +2253,23 @@ let BENCHMARKS = [
         tags: ["default", "js", "Proxy"],
     }),
     new AsyncBenchmark({
+        name: "jsdom-d3-startup",
+        files: [
+            "./startup-helper/StartupBenchmark.js",
+            "./jsdom-d3-startup/benchmark.js",
+        ],
+        preload: {
+            // Unminified sources for profiling.
+            // BUNDLE: "./jsdom-d3-startup/dist/bundle.js",
+            BUNDLE: "./jsdom-d3-startup/dist/bundle.min.js",
+            US_DATA: "./jsdom-d3-startup/data/counties-albers-10m.json",
+            AIRPORTS: "./jsdom-d3-startup/data/airports.csv",
+        },
+        tags: ["d3", "startup", "jsdom"],
+        iterations: 15,
+        worstCaseCount: 2,
+    }),
+    new AsyncBenchmark({
         name: "web-ssr",
         files: [
             "./web-ssr/benchmark.js",
