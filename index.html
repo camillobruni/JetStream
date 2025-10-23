@@ -36,7 +36,9 @@
     const isInBrowser = true;
     const isD8 = false;
     const isSpiderMonkey = false;
-    globalThis.JetStreamParamsSource = new URLSearchParams(globalThis?.location?.search);
+    if (globalThis?.location?.search) {
+        globalThis.JetStreamParamsSource = new URLSearchParams(globalThis?.location?.search);
+    }
     globalThis.allIsGood = true;
     window.onerror = function(e) {
         if (e == "Script error.") {
@@ -52,6 +54,9 @@
         const bodyClassList = document.body.classList;
         if (JetStreamParams.startDelay !== undefined) {
             bodyClassList.remove("animate");
+        }
+        if (!JetStreamParams.isDefault) {
+            showNonDefaultParams();
         }
         if (globalThis.allIsGood) {
             try {
@@ -72,6 +77,17 @@
         }
     }
 
+    function showNonDefaultParams() {
+        document.body.classList.add("nonDefaultParams"); 
+        const body = document.querySelector("#non-standard-params-table tbody");
+        for (const [key, value] of  Object.entries(JetStreamParams.nonDefaultParams)) {
+            const defaultValue = DefaultJetStreamParams[key]
+            const row = body.insertRow();
+            row.insertCell().textContent = key;
+            row.insertCell().textContent = JSON.stringify(value);
+            row.insertCell().textContent = JSON.stringify(defaultValue);
+        }
+    }
     </script>
 
     <script src="params.js"></script>
@@ -87,6 +103,23 @@
 
 <main>
     <p class="summary">JetStream 3 is a JavaScript and WebAssembly benchmark suite focused on the most advanced web applications. It rewards browsers that start up quickly, execute code quickly, and run smoothly. For more information, read the <a href="in-depth.html">in-depth analysis</a>. Bigger scores are better.</p>
+    <div id="non-default-params">
+        <h2>Non-standard Parameters</h2>
+        <p>
+            JetStream ran with non-standard parameters.<br />
+            The results are likely not comparable to default runs.
+        </p>
+        <table id="non-standard-params-table">
+            <thead>
+                <tr>
+                    <th>Param</th>
+                    <th>Value</th>
+                    <th>Default</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
     <p class="summary" id="mode-description"></p>
 
     <div id="result-summary"></div>
