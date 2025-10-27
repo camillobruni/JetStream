@@ -905,8 +905,10 @@ class Benchmark {
         }
         if (this.plan.preload) {
             let preloadCode = "";
-            for (let [ variableName, blobURLOrPath ] of this.preloads)
+            for (let [ variableName, blobURLOrPath ] of this.preloads) {
+                console.log(variableName, blobURLOrPath);
                 preloadCode += `JetStream.preload[${JSON.stringify(variableName)}] = "${blobURLOrPath}";\n`;
+            }
             scripts.add(preloadCode);
         }
 
@@ -2351,7 +2353,7 @@ let BENCHMARKS = [
             "./generators/js-tokens.js",
         ],
         preload: {
-            "jsTokensSourceCode": "./generators/js-tokens.js",
+            SOURCE_CODE: "./generators/js-tokens-input.js",
         },
         tags: ["default", "js", "Generators"],
     }),
