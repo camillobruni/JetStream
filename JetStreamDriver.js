@@ -1909,7 +1909,7 @@ let BENCHMARKS = [
     new AsyncBenchmark({
         name: "first-inspector-code-load",
         files: [
-            "./code-load/code-first-load.js",
+            "./code-load/first-inspector-code-load.js",
         ],
         preload: {
             inspectorPayloadBlob: "./code-load/inspector-payload-minified.js",
@@ -1919,7 +1919,7 @@ let BENCHMARKS = [
     new AsyncBenchmark({
         name: "multi-inspector-code-load",
         files: [
-            "./code-load/code-multi-load.js",
+            "./code-load/multi-inspector-code-load.js",
         ],
         preload: {
             inspectorPayloadBlob: "./code-load/inspector-payload-minified.js",
@@ -1938,7 +1938,7 @@ let BENCHMARKS = [
     new DefaultBenchmark({
         name: "octane-code-load",
         files: [
-            "./Octane/code-first-load.js",
+            "./Octane/code-load.js",
         ],
         deterministicRandom: true,
         tags: ["default", "js", "codeload", "Octane"],
@@ -1954,7 +1954,7 @@ let BENCHMARKS = [
     new DefaultBenchmark({
         name: "delta-blue",
         files: [
-            "./Octane/deltablue.js"
+            "./Octane/delta-blue.js"
         ],
         deterministicRandom: true,
         tags: ["default", "js",  "Octane"],
@@ -2321,7 +2321,7 @@ let BENCHMARKS = [
     new AsyncBenchmark({
         name: "async-fs",
         files: [
-            "./generators/async-file-system.js",
+            "./generators/async-fs.js",
         ],
         iterations: 80,
         worstCaseCount: 6,
@@ -2331,7 +2331,7 @@ let BENCHMARKS = [
     new DefaultBenchmark({
         name: "sync-fs",
         files: [
-            "./generators/sync-file-system.js",
+            "./generators/sync-fs.js",
         ],
         iterations: 80,
         worstCaseCount: 6,
@@ -2606,7 +2606,7 @@ let BENCHMARKS = [
     new AsyncBenchmark({
         name: "bomb-workers",
         files: [
-            "./worker/bomb.js",
+            "./worker/bomb-workers.js",
         ],
         exposeBrowserTest: true,
         iterations: 80,
