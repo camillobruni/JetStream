@@ -34,7 +34,7 @@ import os from "os";
 import {logInfo, logError, printHelp, runTest} from "./helper.mjs";
 
 
-function sleep() {
+function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
