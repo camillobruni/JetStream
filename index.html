@@ -59,13 +59,11 @@
         if (globalThis.allIsGood) {
             try {
                 await JetStream.initialize();
-                document.body.classList.add("ready");
             } catch (e) {
                 globalThis.allIsGood = false;
                 console.error(e);
             } finally {
                 bodyClassList.remove("loading");
-                bodyClassList.remove("animate-loading");
             }
         }
         if (!globalThis.allIsGood) {
@@ -121,7 +119,9 @@
     <p class="summary" id="mode-description"></p>
 
     <div id="result-summary"></div>
-    <div id="status">Loading Benchmark...</div>
+    <div id="status">
+        <div id="status-counter">Loading Benchmark...</div>
+    </div>
 
     <div id="results"></div>
 </main>
