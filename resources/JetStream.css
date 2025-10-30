@@ -64,7 +64,7 @@ body {
     background-position: center -5vw;
     background-size: 100vw;
     padding-bottom: 0px;
-    background-image: url('img/clouds.svg');
+    background-image: url('./clouds.svg');
     padding-bottom: 0px;
     overflow-y: hidden;
     height: 100%;
@@ -175,7 +175,7 @@ img {
     box-sizing: border-box;
     background-repeat: no-repeat;
     background-position: center;
-    background-image: url('img/JetStream3Logo.svg');
+    background-image: url('./JetStream3Logo.svg');
     color: transparent;
     height: 75px;
 }
@@ -197,7 +197,7 @@ img {
     background-position: center;
     padding: 2rem 0;
     margin: -2rem 0;
-    background-image: url("img/jetstreams-static.svg");
+    background-image: url("./jetstreams-static.svg");
 }
 
 
@@ -207,11 +207,11 @@ img {
 }
 
 .animate #jetstreams {
-    background-image: url("img/jetstreams.svg");
+    background-image: url("./jetstreams.svg");
     transition: background-image var(--startup-animation-duration) ease-in-out;
 }
 .ready #jetstreams {
-    background-image: url("img/jetstreams-static.svg") !important;
+    background-image: url("./jetstreams-static.svg") !important;
 }
 
 #magic {
