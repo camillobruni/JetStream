@@ -74,7 +74,7 @@
         document.body.classList.add("nonDefaultParams"); 
         const body = document.querySelector("#non-standard-params-table tbody");
         const nonDefaultParams = JetStreamParams.nonDefaultParams;
-        console.warn(`Using non standard params: ${JSON.stringify(paramsDiff, null, 2)}`)
+        console.warn(`Using non standard params: ${JSON.stringify(nonDefaultParams, null, 2)}`)
         for (const [key, value] of  Object.entries(nonDefaultParams)) {
             const defaultValue = DefaultJetStreamParams[key]
             const row = body.insertRow();
