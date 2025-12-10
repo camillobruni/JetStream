@@ -2382,7 +2382,7 @@ let BENCHMARKS = [
             "./generators/js-tokens.js",
         ],
         preload: {
-            SOURCE_CODE: "./generators/js-tokens-input.js",
+            SOURCE_CODE: "./generators/js-tokens.js",
         },
         tags: ["default", "js", "Generators"],
     }),
