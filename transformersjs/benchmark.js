@@ -16,12 +16,13 @@ globalThis.URL = URL;
 
 // Polyfill fetch for shell-compatibility and to cache / preload model weights etc.
 let preload = { /* Initialized in init() below due to async. */ };
-const originalFetch = globalThis.fetch ?? function(url) {
-  throw new Error("no fetch available");
-}
-globalThis.fetch = async function(url) {
+
+async function redirectingFetch(url) {
   // DEBUG
   // console.log('fetch', url);
+
+  if (url.startsWith("./"))
+    url = JetStream.resources[url];
 
   // Redirect some paths to cached/preloaded resources.
   if (preload[url]) {
@@ -38,8 +39,7 @@ globalThis.fetch = async function(url) {
     };
   }
 
-  // This should only be called in the browser, where fetch() is available.
-  return originalFetch(url);
+  throw new Error(`Unexpected resource requested in benchmark: ${url}`);
 };
 
 // JetStream benchmark harness. Reuse for two different Transformers.js tasks.
@@ -66,6 +66,9 @@ class Benchmark {
       // DEBUG
       // console.log('inputFile', this.inputFile.byteLength, 'bytes');
     }
+
+    // After we have loaded everything close the door behind us to make sure no other network requests happen.
+    globalThis.fetch = redirectingFetch;
   }
 
   async runIteration() {

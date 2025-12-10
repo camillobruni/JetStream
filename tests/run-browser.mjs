@@ -26,6 +26,8 @@
 
 import serve from "./server.mjs";
 import { Builder, Capabilities, logging } from "selenium-webdriver";
+import { Options as ChromeOptions } from "selenium-webdriver/chrome.js";
+import { Options as FirefoxOptions } from "selenium-webdriver/firefox.js";
 import commandLineArgs from "command-line-args";
 import { promises as fs } from "fs";
 import path from "path";
@@ -33,6 +35,45 @@ import os from "os";
 
 import {logInfo, logError, printHelp, runTest} from "./helper.mjs";
 
+const TESTS = [
+    {
+        name: "Run Single Suite",
+        tags: ["all", "main"],
+        run() {
+            return runEnd2EndTest("Run Single Suite", { test: "proxy-mobx" });
+        }
+    },
+    {
+        name: "Run Multiple Suites",
+        tags: ["all", "main"],
+        run() {
+            return runEnd2EndTest("Run Multiple Suites", { test: "prismjs-startup-es6,postcss-wtb" });
+        }
+    },
+    {
+        name: "Run Tag No Prefetch",
+        tags: ["all", "main"],
+        run() {
+            return runEnd2EndTest("Run Tag No Prefetch",  { tag: "proxy", prefetchResources: "false" });
+        }
+    },
+    {
+        name: "Run Disabled Suite",
+        tags: ["all", "disabled"],
+        run() {
+            return runEnd2EndTest("Run Disabled Suite", { tag: "disabled" });
+        }
+    },
+    {
+        name: "Run Default Suite",
+        tags: ["all", "default"],
+        run() {
+            return runEnd2EndTest("Run Default Suite");
+        }
+    }
+];
+
+const VALID_TAGS = Array.from(new Set(TESTS.map((each) => each.tags).flat()));
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -42,18 +83,24 @@ const optionDefinitions = [
     { name: "browser", type: String, description: "Set the browser to test, choices are [safari, firefox, chrome, edge]. By default the $BROWSER env variable is used." },
     { name: "port", type: Number, defaultValue: 8010, description: "Set the test-server port, The default value is 8010." },
     { name: "help", alias: "h", description: "Print this help text." },
+    { name: "suite", type: String, defaultOption: true, typeLabel: `{underline choices}: ${VALID_TAGS.join(", ")}`, description: "Run a specific suite by name." }
 ];
 
 const options = commandLineArgs(optionDefinitions);
 
 if ("help" in options)
-    printHelp(optionDefinitions);
+    printHelp("". optionDefinitions);
+
+if (options.suite && !VALID_TAGS.includes(options.suite))
+    printHelp(`Invalid suite: ${options.suite}. Choices are: ${VALID_TAGS.join(", ")}`);
 
 const BROWSER = options?.browser;
 if (!BROWSER)
     printHelp("No browser specified, use $BROWSER or --browser", optionDefinitions);
+const IS_HEADLESS = os.platform() === "linux" && !process.env.DISPLAY;
 
 let capabilities;
+let browserOptions;
 switch (BROWSER) {
     case "safari":
         capabilities = Capabilities.safari();
@@ -61,11 +108,19 @@ switch (BROWSER) {
         break;
 
     case "firefox": {
-        capabilities = Capabilities.firefox();
+        capabilities = Capabilities.firefox()
+        if (IS_HEADLESS) {
+            browserOptions = new FirefoxOptions();
+            browserOptions.addArguments("-headless"); 
+        }
         break;
     }
     case "chrome": {
-        capabilities = Capabilities.chrome();
+        capabilities = Capabilities.chrome()
+        if (IS_HEADLESS) {
+            browserOptions = new ChromeOptions();
+            browserOptions.addArguments("--headless"); 
+        }
         break;
     }
     case "edge": {
@@ -73,7 +128,7 @@ switch (BROWSER) {
         break;
     }
     default: {
-        printHelp(`Invalid browser "${BROWSER}", choices are: "safari", "firefox", "chrome", "edge"`);
+        printHelp(`Invalid browser "${BROWSER}", choices are: "safari", "firefox", "chrome", "edge"`, optionDefinitions);
     }
 }
 
@@ -91,12 +146,19 @@ const server = await serve(PORT);
 
 async function runTests() {
     let success = true;
+    const suiteFilter = options.suite || "all";
+
+    const testsToRun = TESTS.filter(test => test.tags.includes(suiteFilter));
+
+    if (testsToRun.length === 0) {
+        console.error(`No suite found for filter: ${suiteFilter}`);
+        process.exit(1);
+    }
+
     try {
-        success &&= await runEnd2EndTest("Run Single Suite", { test: "proxy-mobx" });
-        success &&= await runEnd2EndTest("Run Multiple Suites", { test: "prismjs-startup-es6,postcss-wtb" });
-        success &&= await runEnd2EndTest("Run Tag No Prefetch",  { tag: "proxy", prefetchResources: "false" });
-        success &&= await runEnd2EndTest("Run Disabled Suite", { tag: "disabled" });
-        success &&= await runEnd2EndTest("Run Default Suite");
+        for (const test of testsToRun) {
+            success &&= await test.run();
+        }
     } finally {
         server.close();
     }
@@ -109,7 +171,20 @@ async function runEnd2EndTest(name, params) {
 }
 
 async function testEnd2End(params) {
-    const driver = await new Builder().withCapabilities(capabilities).build();
+    const builder =  new Builder().withCapabilities(capabilities);
+    if (browserOptions) {
+        switch(BROWSER) {
+            case "firefox":
+                builder.setFirefoxOptions(browserOptions);
+                break;
+            case "chrome":
+                builder.setChromeOptions(browserOptions);
+                break;
+            default:
+                break;
+        }
+    }
+    const driver = await builder.build();
     const sessionId = (await driver.getSession()).getId();
     const driverCapabilities = await driver.getCapabilities();
     logInfo(`Browser: ${driverCapabilities.getBrowserName()} ${driverCapabilities.getBrowserVersion()}`);

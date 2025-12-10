@@ -560,8 +560,18 @@ const BenchmarkState = Object.freeze({
 
 
 class Scripts {
-    constructor() {
+    constructor(preloads) {
         this.scripts = [];
+
+        let preloadsCode = "";
+        let resourcesCode = "";
+        for (let { name, resource, blobURLOrPath } of preloads) {
+            console.assert(name?.length > 0, "Invalid preload name.");
+            console.assert(resource?.length > 0, "Invalid preload resource.");
+            console.assert(blobURLOrPath?.length > 0, "Invalid preload data.");
+            preloadsCode += `${JSON.stringify(name)}: "${blobURLOrPath}",\n`;
+            resourcesCode += `${JSON.stringify(resource)}: "${blobURLOrPath}",\n`;
+        }
         // Expose a globalThis.JetStream object to the workload. We use
         // a proxy to prevent prototype access and throw on unknown properties.
         this.add(`
@@ -569,11 +579,16 @@ class Scripts {
                 get(target, property, receiver) {
                     throw new Error(name + "." + property + " is not defined.");
                 }
-            }); 
+            });
             globalThis.JetStream = {
                 __proto__: throwOnAccess("JetStream"),
                 preload: {
                     __proto__: throwOnAccess("JetStream.preload"),
+                    ${preloadsCode}
+                },
+                resources: {
+                    __proto__: throwOnAccess("JetStream.preload"),
+                    ${resourcesCode}
                 },
             };
             `);
@@ -631,8 +646,8 @@ class Scripts {
 }
 
 class ShellScripts extends Scripts {
-    constructor() {
-        super();
+    constructor(preloads) {
+        super(preloads);
         this.prefetchedResources = Object.create(null);;
     }
 
@@ -698,8 +713,8 @@ class ShellScripts extends Scripts {
 }
 
 class BrowserScripts extends Scripts {
-    constructor() {
-        super();
+    constructor(preloads) {
+        super(preloads);
         this.add("window.onerror = top.currentReject;");
     }
 
@@ -738,7 +753,7 @@ class Benchmark {
         this.isAsync = !!plan.isAsync;
         this.allowUtf16 = !!plan.allowUtf16;
         this.scripts = null;
-        this.preloads = null;
+        this.preloads = [];
         this.shellPrefetchedResources = null;
         this.results = [];
         this._state = BenchmarkState.READY;
@@ -842,8 +857,9 @@ class Benchmark {
 
     get prerunCode() { return null; }
 
+
     get preIterationCode() {
-        let code = `benchmark.prepareForNextIteration?.();`;
+        let code = this.prepareForNextIterationCode ;
         if (this.plan.deterministicRandom)
             code += `Math.random.__resetSeed();`;
 
@@ -851,6 +867,10 @@ class Benchmark {
             code += JetStreamParams.customPreIterationCode;
 
         return code;
+    }
+
+    get prepareForNextIterationCode() {
+        return "benchmark.prepareForNextIteration?.();"
     }
 
     get postIterationCode() {
@@ -893,7 +913,7 @@ class Benchmark {
         if (this.isDone)
             throw new Error(`Cannot run Benchmark ${this.name} twice`);
         this._state = BenchmarkState.PREPARE;
-        const scripts = isInBrowser ? new BrowserScripts() : new ShellScripts();
+        const scripts = isInBrowser ? new BrowserScripts(this.preloads) : new ShellScripts(this.preloads);
 
         if (!!this.plan.deterministicRandom)
             scripts.addDeterministicRandom()
@@ -902,15 +922,6 @@ class Benchmark {
 
         if (this.shellPrefetchedResources) {
             scripts.addPrefetchedResources(this.shellPrefetchedResources);
-        }
-        if (this.plan.preload) {
-            let preloadCode = "";
-            for (let [ variableName, blobURLOrPath ] of this.preloads) {
-                console.assert(variableName?.length > 0, "Invalid preload name.");
-                console.assert(blobURLOrPath?.length > 0, "Invalid preload data.");
-                preloadCode += `JetStream.preload[${JSON.stringify(variableName)}] = "${blobURLOrPath}";\n`;
-            }
-            scripts.add(preloadCode);
         }
 
         const prerunCode = this.prerunCode;
@@ -1062,12 +1073,11 @@ class Benchmark {
             }));
 
         if (this.plan.preload) {
-            this.preloads = [];
             for (const [name, resource] of Object.entries(this.plan.preload)) {
                 promises.push(this.loadBlob("preload", name, resource).then((blobData) => {
                     if (!globalThis.allIsGood)
                         return;
-                    this.preloads.push([ blobData.prop, blobData.blobURL ]);
+                    this.preloads.push({ name: blobData.prop, resource: blobData.resource, blobURLOrPath: blobData.blobURL });
                     this.updateCounter();
                 }).catch((error) => {
                     // We'll try again later in retryPrefetchResourceForBrowser(). Don't throw an error.
@@ -1094,7 +1104,7 @@ class Benchmark {
             if (type == "preload") {
                 if (this.failedPreloads && this.failedPreloads[blobData.prop]) {
                     this.failedPreloads[blobData.prop] = false;
-                    this.preloads.push([ blobData.prop, blobData.blobURL ]);
+                    this.preloads.push({ name: blobData.prop, resource: blobData.resource, blobURLOrPath: blobData.blobURL });
                     counter.failedPreloadResources--;
                 }
             }
@@ -1107,7 +1117,7 @@ class Benchmark {
             if (!globalThis.allIsGood)
                 return;
             if (blobData.type == "preload")
-                this.preloads.push([ blobData.prop, blobData.blobURL ]);
+                this.preloads.push({ name: blobData.prop, resource: blobData.resource, blobURLOrPath: blobData.blobURL });
             this.updateCounter();
         });
 
@@ -1145,8 +1155,7 @@ class Benchmark {
         console.assert(this.scripts === null, "This initialization should be called only once.");
         this.scripts = this.plan.files.map(file => shellFileLoader.load(file));
 
-        console.assert(this.preloads === null, "This initialization should be called only once.");
-        this.preloads = [];
+        console.assert(this.preloads.length === 0, "This initialization should be called only once.");
         this.shellPrefetchedResources = Object.create(null);
         if (!this.plan.preload) {
             return;
@@ -1165,7 +1174,7 @@ class Benchmark {
                 this.shellPrefetchedResources[resource] = bytes;
             }
 
-            this.preloads.push([name, resource]);
+            this.preloads.push({ name, resource, blobURLOrPath: resource });
         }
     }
 
@@ -1517,6 +1526,10 @@ class AsyncBenchmark extends DefaultBenchmark {
             `;
         }
         return str;
+    }
+
+    get prepareForNextIterationCode() {
+        return "await benchmark.prepareForNextIteration?.();"
     }
 
     get runnerCode() {
@@ -2510,8 +2523,8 @@ let BENCHMARKS = [
             inputFontItalic: "./Kotlin-compose/build/jetbrainsmono_italic.ttf",
             inputFontRegular: "./Kotlin-compose/build/jetbrainsmono_regular.ttf"
         },
-        iterations: 15,
-        worstCaseCount: 2,
+        iterations: 5,
+        worstCaseCount: 1,
         tags: ["default", "Wasm"],
     }),
     new AsyncBenchmark({
