@@ -73,7 +73,7 @@ table {
 }
 
 body.nonDefaultParams {
-    filter: hue-rotate(152deg);
+    filter: hue-rotate(53deg);
 }
 
 .nonDefaultParams .summary {
