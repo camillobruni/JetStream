@@ -1,39 +1,126 @@
 #! /usr/bin/env node
 /* eslint-disable-next-line  no-unused-vars */
+
+// Copyright (C) 2007-2025 Apple Inc. All rights reserved.
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+// 1. Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+
+// THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
+// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+// THE POSSIBILITY OF SUCH DAMAGE.
+
 import serve from "./server.mjs";
-import { Builder, Capabilities } from "selenium-webdriver";
+import { Builder, Capabilities, logging } from "selenium-webdriver";
+import { Options as ChromeOptions } from "selenium-webdriver/chrome.js";
+import { Options as FirefoxOptions } from "selenium-webdriver/firefox.js";
 import commandLineArgs from "command-line-args";
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
 
 import {logInfo, logError, printHelp, runTest} from "./helper.mjs";
+
+const TESTS = [
+    {
+        name: "Run Single Suite",
+        tags: ["all", "main"],
+        run() {
+            return runEnd2EndTest("Run Single Suite", { test: "proxy-mobx" });
+        }
+    },
+    {
+        name: "Run Multiple Suites",
+        tags: ["all", "main"],
+        run() {
+            return runEnd2EndTest("Run Multiple Suites", { test: "prismjs-startup-es6,postcss-wtb" });
+        }
+    },
+    {
+        name: "Run Tag No Prefetch",
+        tags: ["all", "main"],
+        run() {
+            return runEnd2EndTest("Run Tag No Prefetch",  { tag: "proxy", prefetchResources: "false" });
+        }
+    },
+    {
+        name: "Run Disabled Suite",
+        tags: ["all", "disabled"],
+        run() {
+            return runEnd2EndTest("Run Disabled Suite", { tag: "disabled" });
+        }
+    },
+    {
+        name: "Run Default Suite",
+        tags: ["all", "default"],
+        run() {
+            return runEnd2EndTest("Run Default Suite");
+        }
+    }
+];
+
+const VALID_TAGS = Array.from(new Set(TESTS.map((each) => each.tags).flat()));
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 const optionDefinitions = [
     { name: "browser", type: String, description: "Set the browser to test, choices are [safari, firefox, chrome, edge]. By default the $BROWSER env variable is used." },
     { name: "port", type: Number, defaultValue: 8010, description: "Set the test-server port, The default value is 8010." },
     { name: "help", alias: "h", description: "Print this help text." },
+    { name: "suite", type: String, defaultOption: true, typeLabel: `{underline choices}: ${VALID_TAGS.join(", ")}`, description: "Run a specific suite by name." }
 ];
-
 
 const options = commandLineArgs(optionDefinitions);
 
 if ("help" in options)
-    printHelp(optionDefinitions);
+    printHelp("". optionDefinitions);
+
+if (options.suite && !VALID_TAGS.includes(options.suite))
+    printHelp(`Invalid suite: ${options.suite}. Choices are: ${VALID_TAGS.join(", ")}`);
 
 const BROWSER = options?.browser;
 if (!BROWSER)
     printHelp("No browser specified, use $BROWSER or --browser", optionDefinitions);
+const IS_HEADLESS = os.platform() === "linux" && !process.env.DISPLAY;
 
 let capabilities;
+let browserOptions;
 switch (BROWSER) {
     case "safari":
         capabilities = Capabilities.safari();
+        capabilities.set("safari:diagnose", true);
         break;
 
     case "firefox": {
-        capabilities = Capabilities.firefox();
+        capabilities = Capabilities.firefox()
+        if (IS_HEADLESS) {
+            browserOptions = new FirefoxOptions();
+            browserOptions.addArguments("-headless"); 
+        }
         break;
     }
     case "chrome": {
-        capabilities = Capabilities.chrome();
+        capabilities = Capabilities.chrome()
+        if (IS_HEADLESS) {
+            browserOptions = new ChromeOptions();
+            browserOptions.addArguments("--headless"); 
+        }
         break;
     }
     case "edge": {
@@ -41,7 +128,7 @@ switch (BROWSER) {
         break;
     }
     default: {
-        printHelp(`Invalid browser "${BROWSER}", choices are: "safari", "firefox", "chrome", "edge"`);
+        printHelp(`Invalid browser "${BROWSER}", choices are: "safari", "firefox", "chrome", "edge"`, optionDefinitions);
     }
 }
 
@@ -59,11 +146,19 @@ const server = await serve(PORT);
 
 async function runTests() {
     let success = true;
+    const suiteFilter = options.suite || "all";
+
+    const testsToRun = TESTS.filter(test => test.tags.includes(suiteFilter));
+
+    if (testsToRun.length === 0) {
+        console.error(`No suite found for filter: ${suiteFilter}`);
+        process.exit(1);
+    }
+
     try {
-        success &&= await runEnd2EndTest("Run Single Suite", { test: "proxy-mobx" });
-        success &&= await runEnd2EndTest("Run Tag No Prefetch",  { tag: "proxy", prefetchResources: "false" });
-        success &&= await runEnd2EndTest("Run Disabled Suite", { tag: "disabled" });
-        success &&= await runEnd2EndTest("Run Default Suite");
+        for (const test of testsToRun) {
+            success &&= await test.run();
+        }
     } finally {
         server.close();
     }
@@ -76,7 +171,21 @@ async function runEnd2EndTest(name, params) {
 }
 
 async function testEnd2End(params) {
-    const driver = await new Builder().withCapabilities(capabilities).build();
+    const builder =  new Builder().withCapabilities(capabilities);
+    if (browserOptions) {
+        switch(BROWSER) {
+            case "firefox":
+                builder.setFirefoxOptions(browserOptions);
+                break;
+            case "chrome":
+                builder.setChromeOptions(browserOptions);
+                break;
+            default:
+                break;
+        }
+    }
+    const driver = await builder.build();
+    const sessionId = (await driver.getSession()).getId();
     const driverCapabilities = await driver.getCapabilities();
     logInfo(`Browser: ${driverCapabilities.getBrowserName()} ${driverCapabilities.getBrowserVersion()}`);
     const urlParams = Object.assign({
@@ -84,6 +193,7 @@ async function testEnd2End(params) {
             iterationCount: 3 
         }, params);
     let results;
+    let success = true;
     try {
         const url = new URL(`http://localhost:${PORT}/index.html`);
         url.search = new URLSearchParams(urlParams).toString();
@@ -101,9 +211,15 @@ async function testEnd2End(params) {
         results = await benchmarkResults(driver);
         // FIXME: validate results;
     } catch(e) {
+        success = false;
         throw e;
     } finally {
-        driver.quit();
+        await driver.quit();
+        if (BROWSER === "safari")
+            await sleep(1000);
+        if (!success) {
+            await printLogs(sessionId);
+        }
     }
 }
 
@@ -127,7 +243,6 @@ class JetStreamTestError extends Error {
         super(`Tests failed: ${errors.map(e => e.stack).join(", ")}`);
         this.errors = errors;
     }
-
 }
 
 const UPDATE_INTERVAL = 250;
@@ -159,6 +274,30 @@ function logIncrementalResult(previousResults, benchmarkResults) {
             continue;
         console.log(testName, testResults);
         previousResults.add(testName);
+    }
+}
+
+function printLogs(sessionId) {
+    if (BROWSER === "safari" && sessionId)
+        return printSafariLogs(sessionId);
+}
+
+async function printSafariLogs(sessionId) {
+    const sessionLogDir = path.join(os.homedir(), "Library", "Logs", "com.apple.WebDriver", sessionId);
+    try {
+        const files = await fs.readdir(sessionLogDir);
+        const logFiles = files.filter(f => f.startsWith("safaridriver.") && f.endsWith(".txt"));
+        if (logFiles.length === 0) {
+            logInfo(`No safaridriver log files found in session directory: ${sessionLogDir}`);
+            return;
+        }
+        for (const file of logFiles) {
+            const logPath = path.join(sessionLogDir, file);
+            const logContent = await fs.readFile(logPath, "utf8");
+            logGroup(`SafariDriver Log: ${file}`, () => console.log(logContent));
+        }
+    } catch (err) {
+        logError("Error reading SafariDriver logs:", err);
     }
 }
 

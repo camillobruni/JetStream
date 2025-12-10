@@ -7,6 +7,7 @@ import webpack from "webpack";
 import { fileURLToPath } from "url";
 import { targetList } from "./src/cli/flags-helper.mjs";
 import { createRequire } from "module";
+import { LicenseWebpackPlugin } from "license-webpack-plugin";
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -62,6 +63,10 @@ export default async (env) => {
         TextEncoder: ["text-encoder", "TextEncoder"],
         TextDecoder: ["text-encoder", "TextDecoder"],
       }),
+      new LicenseWebpackPlugin({
+        perChunkOutput: true, 
+        outputFilename: '[name].LICENSE.txt',
+      })
     ],
   };
 
