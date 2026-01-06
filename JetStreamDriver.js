@@ -543,10 +543,10 @@ class Driver {
     }
 
     async prefetchResources() {
-        if (!isInBrowser) {
-            await this.prefetchResourcesForShell();
-        } else {
+        if (isInBrowser) {
             await this.prefetchResourcesForBrowser();
+        } else {
+            await this.prefetchResourcesForShell();
         }
     }
 
