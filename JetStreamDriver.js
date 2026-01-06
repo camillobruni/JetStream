@@ -215,6 +215,17 @@ class BrowserFileLoader {
         // the global `fileLoader` cache.
         this.blobDataCache = { __proto__ : null };
         this.loadCache = { __proto__ : null };
+        this.counter = {
+            __proto__: null,
+            loadedResources: 0,
+            totalResources: 0,
+            failedPreloadResources: 0,
+        }
+    }
+
+    get hasLoadedAllResources() {
+        return !this.counter.failedPreloadResources && (
+            this.counter.loadedResources === this.counter.totalResources);
     }
 
     async doLoadBlob(resource) {
@@ -287,10 +298,11 @@ class BrowserFileLoader {
         return promise;
     }
 
+    
     async retryPrefetchResource(type, prop, file) {
         console.assert(isInBrowser);
 
-        const counter = JetStream.counter;
+        const counter = browserFileLoader.counter;
         const blobData = this.blobDataCache[file];
         if (blobData.blob) {
             // The same preload blob may be used by multiple subtests. Though the blob is already loaded,
@@ -302,7 +314,7 @@ class BrowserFileLoader {
                     counter.failedPreloadResources--;
                 }
             }
-            return !counter.failedPreloadResources && counter.loadedResources == counter.totalResources;
+            return this.hasLoadedAllResources;
         }
 
         // Retry fetching the resource.
@@ -320,7 +332,7 @@ class BrowserFileLoader {
             throw new Error("Fetch failed");
         }
 
-        return !counter.failedPreloadResources && counter.loadedResources == counter.totalResources;
+        return this.hasLoadedAllResources;
     }
 
     free(files) {
@@ -349,10 +361,6 @@ class Driver {
         this.benchmarks = Array.from(new Set(benchmarks));
         this.benchmarks.sort((a, b) => a.plan.name.toLowerCase() < b.plan.name.toLowerCase() ? 1 : -1);
         console.assert(this.benchmarks.length, "No benchmarks selected");
-        this.counter = { };
-        this.counter.loadedResources = 0;
-        this.counter.totalResources = 0;
-        this.counter.failedPreloadResources = 0;
     }
 
     async start() {
@@ -535,38 +543,33 @@ class Driver {
 
     async prefetchResources() {
         if (!isInBrowser) {
-            if (JetStreamParams.prefetchResources) {
-                await zlib.initialize();
-            }
-            for (const benchmark of this.benchmarks)
-                benchmark.prefetchResourcesForShell();
-            return;
+            await this.prefetchResourcesForShell();
+        } else {
+            await this.prefetchResourcesForBrowser();
         }
+    }
 
+    async prefetchResourcesForShell() {
+        if (JetStreamParams.prefetchResources) {
+            await zlib.initialize();
+        }
+        for (const benchmark of this.benchmarks)
+            benchmark.prefetchResourcesForShell();
+    }
+
+    async prefetchResourcesForBrowser() {
         // TODO: Cleanup the browser path of the preloading below and in
         // `prefetchResourcesForBrowser` / `retryPrefetchResourcesForBrowser`.
-        const counter = JetStream.counter;
         const promises = [];
         for (const benchmark of this.benchmarks)
-            promises.push(benchmark.prefetchResourcesForBrowser(counter));
+            promises.push(benchmark.prefetchResourcesForBrowser());
         await Promise.all(promises);
 
-        if (counter.failedPreloadResources || counter.loadedResources != counter.totalResources) {
-            for (const benchmark of this.benchmarks) {
-                const allFilesLoaded = await benchmark.retryPrefetchResourcesForBrowser(counter);
-                if (allFilesLoaded)
-                    break;
-            }
-
-            if (counter.failedPreloadResources || counter.loadedResources != counter.totalResources) {
-                // If we've failed to prefetch resources even after a sequential 1 by 1 retry,
-                // then fail out early rather than letting subtests fail with a hang.
-                globalThis.allIsGood = false;
-                throw new Error("Fetch failed");
-            }
+        if (!browserFileLoader.hasLoadedAllResources) {
+            await this.retryPrefetchResourcesForBrowser()
         }
 
-        JetStream.loadCache = { }; // Done preloading all the files.
+        browserFileLoader.loadCache = { }; // Done preloading all the files.
 
         const statusElement = document.getElementById("status");
         statusElement.classList.remove('loading');
@@ -575,6 +578,22 @@ class Driver {
             statusElement.onclick = null;
             JetStream.start();
             return false;
+        }
+    }
+
+    async retryPrefetchResourcesForBrowser() {
+        const counter = browserFileLoader.counter;
+        for (const benchmark of this.benchmarks) {
+            const allFilesLoaded = await benchmark.retryPrefetchResourcesForBrowser();
+            if (allFilesLoaded)
+                break;
+        }
+
+        if (!browserFileLoader.hasLoadedAllResources) {
+            // If we've failed to prefetch resources even after a sequential 1 by 1 retry,
+            // then fail out early rather than letting subtests fail with a hang.
+            globalThis.allIsGood = false;
+            throw new Error("Fetch failed");
         }
     }
 
@@ -1117,13 +1136,14 @@ class Benchmark {
 
 
     updateCounter() {
-        const counter = JetStream.counter;
+        const counter = browserFileLoader.counter;
         ++counter.loadedResources;
         const statusElement = document.getElementById("status");
         statusElement.innerHTML = `Loading ${counter.loadedResources} of ${counter.totalResources} ...`;
     }
 
-    prefetchResourcesForBrowser(counter) {
+    prefetchResourcesForBrowser() {
+        const counter = browserFileLoader.counter;
         console.assert(isInBrowser);
 
         const promises = this.plan.files.map((file) => browserFileLoader.loadBlob("file", null, file).then((blobData) => {
@@ -1151,11 +1171,11 @@ class Benchmark {
             }
         }
 
-        JetStream.counter.totalResources += promises.length;
+        browserFileLoader.counter.totalResources += promises.length;
         return Promise.all(promises);
     }
 
-    async retryPrefetchResourcesForBrowser(counter) {
+    async retryPrefetchResourcesForBrowser() {
         // FIXME: Move to BrowserFileLoader.
         console.assert(isInBrowser);
 
@@ -1173,7 +1193,7 @@ class Benchmark {
                     return true; // All resources loaded, nothing more to do.
             }
         }
-        return !counter.failedPreloadResources && counter.loadedResources == counter.totalResources;
+        return !this.browserFileLoader.hasPendingResources
     }
 
     prefetchResourcesForShell() {
@@ -1331,14 +1351,14 @@ class GroupedBenchmark extends Benchmark {
         this.benchmarks = benchmarks;
     }
 
-    async prefetchResourcesForBrowser(counter) {
+    async prefetchResourcesForBrowser() {
         for (const benchmark of this.benchmarks)
-            await benchmark.prefetchResourcesForBrowser(counter);
+            await benchmark.prefetchResourcesForBrowser();
     }
 
-    async retryPrefetchResourcesForBrowser(counter) {
+    async retryPrefetchResourcesForBrowser() {
         for (const benchmark of this.benchmarks)
-            await benchmark.retryPrefetchResourcesForBrowser(counter);
+            await benchmark.retryPrefetchResourcesForBrowser();
     }
 
     prefetchResourcesForShell() {
