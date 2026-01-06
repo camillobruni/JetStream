@@ -1171,7 +1171,7 @@ class Benchmark {
             }
         }
 
-        browserFileLoader.counter.totalResources += promises.length;
+        counter.totalResources += promises.length;
         return Promise.all(promises);
     }
 
@@ -1181,7 +1181,6 @@ class Benchmark {
 
         for (const resource of this.plan.files) {
             const allDone = await browserFileLoader.retryPrefetchResource("file", null, resource);
-            
             if (allDone)
                 return true; // All resources loaded, nothing more to do.
         }
@@ -1193,7 +1192,7 @@ class Benchmark {
                     return true; // All resources loaded, nothing more to do.
             }
         }
-        return !this.browserFileLoader.hasPendingResources
+        return browserFileLoader.hasLoadedAllResources
     }
 
     prefetchResourcesForShell() {
