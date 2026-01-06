@@ -357,6 +357,7 @@ class Driver {
         this.isReady = false;
         this.isDone = false;
         this.errors = [];
+        this.fileLoader = isInBrowser ? browserFileLoader : shellFileLoader;
         // Make benchmark list unique and sort it.
         this.benchmarks = Array.from(new Set(benchmarks));
         this.benchmarks.sort((a, b) => a.plan.name.toLowerCase() < b.plan.name.toLowerCase() ? 1 : -1);
