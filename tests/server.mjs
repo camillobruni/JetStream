@@ -71,4 +71,6 @@ function main() {
     serve(options);
 }
 
-if (esMain(import.meta)) main();
+if (esMain(import.meta)) {
+    main();
+}
