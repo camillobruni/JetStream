@@ -873,7 +873,7 @@ class Benchmark {
         return this._files;
     }
     get preloadEntries() { 
-        return this.preloadEntries;
+        return this._preloadEntries;
     }
 
     _processTags(rawTags) {
