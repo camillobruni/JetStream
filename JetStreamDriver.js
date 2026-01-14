@@ -839,12 +839,11 @@ class Benchmark {
     constructor({
             name, 
             files,
-            preload={},
+            preload = {},
             tags, 
             iterations,
             deterministicRandom = false,
             exposeBrowserTest = false,
-            isAsync=false, 
             allowUtf16 = false,
             args = {} }) {
         this._state = BenchmarkState.READY;
@@ -857,7 +856,6 @@ class Benchmark {
         this.iterations = this._processIterationCount(iterations);
         this._deterministicRandom = deterministicRandom;
         this._exposeBrowserTest = exposeBrowserTest;
-        this.isAsync = !!isAsync;
         this.allowUtf16 = !!allowUtf16;
 
         // Resource handling:
@@ -1664,12 +1662,9 @@ class WSLBenchmark extends Benchmark {
     }
 };
 
-class WasmLegacyBenchmark extends Benchmark {
-    constructor({async= false, ...plan}) {
+class AsyncWasmLegacyBenchmark extends Benchmark {
+    constructor(plan) {
         super(plan);
-
-        this.async = async;
-
         this.startupTime = null;
         this.startupScore = null;
         this.runTime = null;
@@ -1776,15 +1771,11 @@ class WasmLegacyBenchmark extends Benchmark {
             preloadCount++;
             str += `JetStream.loadBlob(${JSON.stringify(name)}, "${resource}", () => {\n`;
         }
-        if (this.async) {
-            str += `doRun().catch((e) => {
-                console.log("error running wasm:", e);
-                console.log(e.stack)
-                throw e;
-            });`;
-        } else {
-            str += `doRun();`
-        }
+        str += `doRun().catch((e) => {
+            console.log("error running wasm:", e);
+            console.log(e.stack)
+            throw e;
+        });`;
         for (let i = 0; i < preloadCount; ++i) {
             str += `})`;
         }
@@ -2577,7 +2568,7 @@ let BENCHMARKS = [
         allowUtf16: true,
         tags: ["Wasm", "transformersjs"],
     }),
-    new WasmLegacyBenchmark({
+    new AsyncWasmLegacyBenchmark({
         name: "tfjs-wasm",
         files: [
             "./wasm/tfjs-model-helpers.js",
@@ -2593,13 +2584,12 @@ let BENCHMARKS = [
         preload: {
             tfjsBackendWasmBlob: "./wasm/tfjs-backend-wasm.wasm",
         },
-        async: true,
         deterministicRandom: true,
         exposeBrowserTest: true,
         allowUtf16: true,
         tags: ["Wasm"],
     }),
-    new WasmLegacyBenchmark({
+    new AsyncWasmLegacyBenchmark({
         name: "tfjs-wasm-simd",
         files: [
             "./wasm/tfjs-model-helpers.js",
@@ -2615,7 +2605,6 @@ let BENCHMARKS = [
         preload: {
             tfjsBackendWasmSimdBlob: "./wasm/tfjs-backend-wasm-simd.wasm",
         },
-        async: true,
         deterministicRandom: true,
         exposeBrowserTest: true,
         allowUtf16: true,
