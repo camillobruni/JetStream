@@ -45,9 +45,7 @@ export const optionDefinitions = [
     },
 ];
 
-export async function serve(options) {
-    let { port, quiet } = options;
-
+export async function serve({ port, quiet }) {
     if (!port) throw new Error("Port is required");
 
     const ws = await LocalWebServer.create({
