@@ -186,10 +186,8 @@ function assertThrows(message, func) {
         checkFile(benchmark.name, file, "file");
     }
 
-    if (benchmark._preload) {
-        for (const [name, file] of Object.entries(benchmark._preload)) {
-            checkFile(benchmark.name, file, `preload.${name}`);
-        }
+    for (const [name, file] of Object.entries(benchmark.preloadEntries)) {
+        checkFile(benchmark.name, file, `preload.${name}`);
     }
   }
 })();
