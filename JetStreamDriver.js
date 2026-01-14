@@ -56,25 +56,6 @@ function displayCategoryScores() {
     document.body.classList.add("details");
 }
 
-function getIterationCount(plan) {
-    if (plan.name in JetStreamParams.testIterationCountMap)
-        return JetStreamParams.testIterationCountMap[plan.name];
-    if (JetStreamParams.testIterationCount)
-        return JetStreamParams.testIterationCount;
-    if (plan.iterations)
-        return plan.iterations;
-    return defaultIterationCount;
-}
-
-function getWorstCaseCount(plan) {
-    if (plan.name in JetStreamParams.testWorstCaseCountMap)
-        return JetStreamParams.testWorstCaseCountMap[plan.name];
-    if (JetStreamParams.testWorstCaseCount)
-        return JetStreamParams.testWorstCaseCount;
-    if (plan.worstCaseCount !== undefined)
-        return plan.worstCaseCount;
-    return defaultWorstCaseCount;
-}
 
 if (isInBrowser) {
     document.onkeydown = (keyboardEvent) => {
@@ -336,7 +317,7 @@ class Driver {
         this.errors = [];
         // Make benchmark list unique and sort it.
         this.benchmarks = Array.from(new Set(benchmarks));
-        this.benchmarks.sort((a, b) => a.plan.name.toLowerCase() < b.plan.name.toLowerCase() ? 1 : -1);
+        this.benchmarks.sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? 1 : -1);
         console.assert(this.benchmarks.length, "No benchmarks selected");
     }
 
@@ -504,7 +485,7 @@ class Driver {
         if (isInBrowser)
             window.addEventListener("error", (e) => this.pushError("driver startup", e.error));
         await this.prefetchResources();
-        this.benchmarks.sort((a, b) => a.plan.name.toLowerCase() < b.plan.name.toLowerCase() ? 1 : -1);
+        this.benchmarks.sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? 1 : -1);
         if (isInBrowser)
             this.prepareBrowserUI();
         this.isReady = true;
@@ -855,13 +836,24 @@ class BrowserScripts extends Scripts {
 
 
 class Benchmark {
-    constructor(plan)
-    {
-        this.plan = plan;
-        this.tags = this.processTags(plan.tags)
-        this.iterations = getIterationCount(plan);
-        this.isAsync = !!plan.isAsync;
-        this.allowUtf16 = !!plan.allowUtf16;
+    constructor({
+            name, files, preload={}, tags, 
+            iterations,
+            deterministicRandom = false,
+            exposeBrowserTest = false,
+            isAsync=false, 
+            allowUtf16 = false,
+            args = {} }) {
+        this.name = name
+        this.arguments = args;
+        this.deterministicRandom = deterministicRandom ,
+        this.exposeBrowserTest = exposeBrowserTest;
+        this._files = files
+        this.preload = preload,
+        this.tags = this._processTags(tags)
+        this.iterations = this._processIterationCount(iterations);
+        this.isAsync = !!isAsync;
+        this.allowUtf16 = !!allowUtf16;
         this.scripts = null;
         this.preloads = [];
         this.shellPrefetchedResources = null;
@@ -869,7 +861,12 @@ class Benchmark {
         this._state = BenchmarkState.READY;
     }
 
-    processTags(rawTags) {
+    // Use getter so it can be overridden GroupedBenchmark.
+    get files() {
+        return this._files;
+    }
+
+    _processTags(rawTags) {
         const tags = new Set(rawTags.map(each => each.toLowerCase()));
         if (tags.size != rawTags.length)
             throw new Error(`${this.name} got duplicate tags: ${rawTags.join()}`);
@@ -879,9 +876,27 @@ class Benchmark {
         return tags;
     }
 
-    get name() { return this.plan.name; }
-    get files() { return this.plan.files; }
-    get preloadFiles() { return Object.values(this.plan.preload ?? {}); }
+    _processIterationCount(iterations) {
+        if (this.name in JetStreamParams.testIterationCountMap)
+            return JetStreamParams.testIterationCountMap[this.name];
+        if (JetStreamParams.testIterationCount)
+            return JetStreamParams.testIterationCount;
+        if (iterations)
+            return iterations;
+        return defaultIterationCount;
+    }
+
+    _processWorstCaseCount(worstCaseCount) {
+        if (this.name in JetStreamParams.testWorstCaseCountMap)
+            return JetStreamParams.testWorstCaseCountMap[plan.name];
+        if (JetStreamParams.testWorstCaseCount)
+            return JetStreamParams.testWorstCaseCount;
+        if (worstCaseCount !== undefined)
+            return worstCaseCount;
+        return defaultWorstCaseCount;
+    }
+
+    get preloadFiles() { return Object.values(this.preload ?? {}); }
 
     get isDone() {
         return this._state == BenchmarkState.DONE || this._state == BenchmarkState.ERROR;
@@ -894,7 +909,7 @@ class Benchmark {
 
     get benchmarkArguments() {
         return {
-            ...this.plan.arguments,
+            ...this.arguments,
             iterationCount: this.iterations,
         };
     }
@@ -971,7 +986,7 @@ class Benchmark {
 
     get preIterationCode() {
         let code = this.prepareForNextIterationCode ;
-        if (this.plan.deterministicRandom)
+        if (this.deterministicRandom)
             code += `Math.random.__resetSeed();`;
 
         if (JetStreamParams.customPreIterationCode)
@@ -1034,9 +1049,9 @@ class Benchmark {
 
         const scripts = isInBrowser ? new BrowserScripts(this.preloads) : new ShellScripts(this.preloads);
 
-        if (!!this.plan.deterministicRandom)
+        if (!!this.deterministicRandom)
             scripts.addDeterministicRandom()
-        if (!!this.plan.exposeBrowserTest)
+        if (!!this.exposeBrowserTest)
             scripts.addBrowserTest();
 
         if (this.shellPrefetchedResources) {
@@ -1106,7 +1121,7 @@ class Benchmark {
     async prefetchResourcesForBrowser() {
         console.assert(isInBrowser);
         const promises = this.files.map((file) => browserFileLoader.prefetchResourceFile(file));
-        for (const [name, resource] of Object.entries(this.plan.preload ?? {})) {
+        for (const [name, resource] of Object.entries(this.preload)) {
             promises.push(this.prefetchResourcePreload(name, resource));
         }
         await Promise.all(promises);
@@ -1126,10 +1141,7 @@ class Benchmark {
 
         console.assert(this.preloads.length === 0, "This initialization should be called only once.");
         this.shellPrefetchedResources = Object.create(null);
-        if (!this.plan.preload) {
-            return;
-        }
-        for (let [name, resource] of Object.entries(this.plan.preload)) {
+        for (let [name, resource] of Object.entries(this.preload)) {
             const compressed = isCompressed(resource);
             if (compressed && !JetStreamParams.prefetchResources) {
                 resource = uncompressedName(resource);
@@ -1393,10 +1405,10 @@ class GroupedBenchmark extends Benchmark {
 };
 
 class DefaultBenchmark extends Benchmark {
-    constructor(...args) {
-        super(...args);
+    constructor({worstCaseCount, ...args}) {
+        super(args);
 
-        this.worstCaseCount = getWorstCaseCount(this.plan);
+        this.worstCaseCount = this._processWorstCaseCount(worstCaseCount);
         this.firstIterationTime = null;
         this.firstIterationScore = null;
         this.worstTime = null;
@@ -1577,8 +1589,8 @@ class WasmEMCCBenchmark extends AsyncBenchmark {
 };
 
 class WSLBenchmark extends Benchmark {
-    constructor(...args) {
-        super(...args);
+    constructor(plan) {
+        super(plan);
 
         this.stdlibTime = null;
         this.stdlibScore = null;
@@ -1641,8 +1653,10 @@ class WSLBenchmark extends Benchmark {
 };
 
 class WasmLegacyBenchmark extends Benchmark {
-    constructor(...args) {
-        super(...args);
+    constructor({async= false, ...plan}) {
+        super(plan);
+
+        this.async = async;
 
         this.startupTime = null;
         this.startupScore = null;
@@ -1746,11 +1760,11 @@ class WasmLegacyBenchmark extends Benchmark {
 
         str += "};\n";
         let preloadCount = 0;
-        for (const [name, resource] of Object.entries(this.plan.preload)) {
+        for (const [name, resource] of Object.entries(this.preload)) {
             preloadCount++;
             str += `JetStream.loadBlob(${JSON.stringify(name)}, "${resource}", () => {\n`;
         }
-        if (this.plan.async) {
+        if (this.async) {
             str += `doRun().catch((e) => {
                 console.log("error running wasm:", e);
                 console.log(e.stack)
@@ -2619,7 +2633,7 @@ let BENCHMARKS = [
         preload: {
             BUNDLE: "./babylonjs/dist/bundle.es5.min.js",
         },
-        arguments: {
+        args: {
             expectedCacheCommentCount: 23988,
         },
         tags: ["startup",  "js", "class", "es5", "babylonjs"],
@@ -2634,7 +2648,7 @@ let BENCHMARKS = [
         preload: {
             BUNDLE: "./babylonjs/dist/bundle.es6.min.js",
         },
-        arguments: {
+        args: {
             expectedCacheCommentCount: 21222,
         },
         tags: ["Default",  "js", "startup", "class", "es6", "babylonjs"],
