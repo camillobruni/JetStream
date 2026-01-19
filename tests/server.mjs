@@ -30,27 +30,37 @@ import LocalWebServer from "local-web-server";
 const ROOT_DIR = path.join(process.cwd(), "./");
 
 export const optionDefinitions = [
-    { name: "port", type: Number, defaultValue: 8010, description: "Set the test-server port, The default value is 8010." },
-    { name: "verbose", type: Boolean, defaultValue: false, description: "Log all requests set to the server." },
+    {
+        name: "port",
+        type: Number,
+        defaultValue: 8010,
+        description: "Set the test-server port, The default value is 8010.",
+    },
+    {
+        name: "quiet",
+        alias: "q",
+        type: Boolean,
+        defaultValue: false,
+        description: "Silence the server output.",
+    },
 ];
 
-export async function serve({ port, verbose }) {
-    if (!port)
-        throw new Error("Port is required");
+export async function serve({ port, quiet }) {
+    if (!port) throw new Error("Port is required");
 
     const ws = await LocalWebServer.create({
         port: port,
         directory: ROOT_DIR,
         corsOpenerPolicy: "same-origin",
         corsEmbedderPolicy: "require-corp",
-        logFormat: verbose ? "dev" : "none",
+        logFormat: quiet ? undefined : "dev",
     });
     console.log(`Server started on http://localhost:${port}`);
     process.on("exit", () => ws.server.close());
     return {
         close() {
             ws.server.close();
-        }
+        },
     };
 }
 
@@ -59,5 +69,6 @@ function main() {
     serve(options);
 }
 
-if (esMain(import.meta))
+if (esMain(import.meta)) {
     main();
+}
