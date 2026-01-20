@@ -37,6 +37,7 @@ export function logInfo(...args) {
 }
 
 export function logError(...args) {
+  let error;
   if (args.length == 1 && args[0] instanceof Error)
     error = args[0];
   const text = args.join(" ");
