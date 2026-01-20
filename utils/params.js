@@ -45,7 +45,6 @@ class Params {
     RAMification = false;
     forceGC = false;
     dumpJSONResults = false;
-    dumpTestList = false;
     // Override iteration and worst-case counts per workload.
     // Example:
     //   testIterationCountMap = { "acorn-wtb": 5 };
@@ -70,7 +69,6 @@ class Params {
         this.RAMification = this._parseBooleanParam(sourceParams, "RAMification");
         this.dumpJSONResults = this._parseBooleanParam(sourceParams, "dumpJSONResults");
         this.groupDetails = this._parseBooleanParam(sourceParams, "groupDetails");
-        this.dumpTestList = this._parseBooleanParam(sourceParams, "dumpTestList");
         this.forceGC = this._parseBooleanParam(sourceParams, "forceGC");
 
         this.customPreIterationCode = this._parseStringParam(sourceParams, "customPreIterationCode");
