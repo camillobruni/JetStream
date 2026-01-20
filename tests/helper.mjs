@@ -37,7 +37,7 @@ export function logInfo(...args) {
 }
 
 export function logError(...args) {
-  let error;
+  console.error("Error:");
   if (args.length == 1 && args[0] instanceof Error)
     error = args[0];
   const text = args.join(" ");
@@ -124,7 +124,7 @@ export async function sh(binary, ...args) {
   try {
     return await spawnCaptureStdout(binary, args);
   } catch(e) {
-    logError(e.stdoutString);
+    // logError(e.stdoutString);
     throw e;
   } finally {
     if (GITHUB_ACTIONS_OUTPUT)

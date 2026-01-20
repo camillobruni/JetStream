@@ -175,7 +175,7 @@ function help(message=undefined) {
 if (printHelp) {
     help();
 } else if (dumpTestList) {
-  JetStream.dumpTestList();
+    JetStream.dumpTestList();
 } else {
-  runJetStream();
+    runJetStream();
 }
