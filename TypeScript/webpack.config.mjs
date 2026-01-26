@@ -7,44 +7,50 @@ import * as PathBrowserify from "path-browserify";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const commonConfig = {
-  mode: "production",
-  devtool: "source-map",
-  target: "web",
-  entry: path.resolve(__dirname, "src/test.mjs"),
-  output: {
-    path: path.resolve(__dirname, "dist"),
-    filename: "bundle.js",
-    library: {
-      name: "TypeScriptCompileTest",
-      type: "globalThis",
+function createConfig({filename, mode}) {
+  const isProd = mode === "production";
+  return {
+    mode,
+    devtool: isProd ? "source-map" : false,
+    target: "web",
+    entry: path.resolve(__dirname, "src/test.mjs"),
+    output: {
+      path: path.resolve(__dirname, "dist"),
+      filename,
+      library: {
+        name: "TypeScriptCompileTest",
+        type: "globalThis",
+      },
+      libraryTarget: "assign",
     },
-    libraryTarget: "assign",
-  },
-  plugins: [
-    new UnicodeEscapePlugin({
-      test: /\.(js|jsx|ts|tsx)$/, // Escape Unicode in JavaScript and TypeScript files
-    }),
-    new LicenseWebpackPlugin({
-      perChunkOutput: true, 
-      outputFilename: "LICENSE.txt",
-    }),
-  ],
-  optimization: {
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          keep_fnames: true,
-        },
+    plugins: [
+      new UnicodeEscapePlugin({
+        test: /\.(js|jsx|ts|tsx)$/, // Escape Unicode in JavaScript and TypeScript files
+      }),
+      new LicenseWebpackPlugin({
+        perChunkOutput: true, 
+        outputFilename: "LICENSE.txt",
       }),
     ],
-  },
-  resolve: {
-    fallback: {
-      "path": "path-browserify",
-      "fs": false,
+    optimization: {
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            keep_fnames: true,
+          },
+        }),
+      ],
     },
-  },
-};
+    resolve: {
+      fallback: {
+        "path": "path-browserify",
+        "fs": false,
+      },
+    },
+  };
+}
 
-export default [commonConfig];
+export default [
+  createConfig({ filename: "bundle.min.js", mode: "production" }),
+  createConfig({ filename: "bundle.dev.js", mode: "development" }),
+];

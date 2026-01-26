@@ -8,7 +8,8 @@
     "clean": "rm -rf dist/*",
     "build": "webpack",
     "build:data": "node build/build.mjs",
-    "build:dev": "webpack --mode development"
+    "postbuild": "npm run compress",
+    "compress": "node ../utils/compress.mjs --keep dist/*bundle*.dev.js"
   },
   "dependencies": {
     "@babel/core": "^7.28.3",

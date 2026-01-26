@@ -4,7 +4,9 @@
   "scripts": {
     "test": "node ./benchmark-node.mjs",
     "clean": "rm -rf dist/*",
-    "build": "webpack"
+    "build": "webpack",
+    "postbuild": "npm run compress",
+    "compress": "node ../utils/compress.mjs --keep dist/*bundle*.dev.js"
   },
   "license": "See LICENSE files",
   "dependencies": {

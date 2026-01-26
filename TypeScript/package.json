@@ -9,7 +9,8 @@
     "import": "node ./build/import-src-project.mjs",
     "prebuild": "npm run clean  && npm run import",
     "build": "webpack",
-    "build:dev": "npm run prebuild && webpack --mode development"
+    "postbuild": "npm run compress",
+    "compress": "node ../utils/compress.mjs --keep dist/*bundle*.dev.js"
   },
   "keywords": [],
   "author": "",

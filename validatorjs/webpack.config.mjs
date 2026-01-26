@@ -7,12 +7,13 @@ import { LicenseWebpackPlugin } from "license-webpack-plugin";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function config({ filename, minify }) {
+function config({ filename, mode }) {
+  const isProd = mode === "production";
   return {
     entry: "./src/test.mjs",
-    mode: "production",
-    devtool: "source-map",
-    target: "web",
+    mode,
+    devtool: isProd ? "source-map" : false,
+    target: ["web", "es6"],
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: filename,
@@ -37,6 +38,6 @@ function config({ filename, minify }) {
 }
 
 export default [
-  config({ filename: "bundle.es6.min.js", minify: true }),
-  config({ filename: "bundle.es6.js", minify: false }),
+  config({ filename: "bundle.min.js", minify: true }),
+  config({ filename: "bundle.dev.js", minify: false }),
 ];

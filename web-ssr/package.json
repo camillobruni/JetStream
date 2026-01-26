@@ -8,7 +8,8 @@
     "clean": "rm -rf dist/*",
     "prebuild": "npm run clean",
     "build": "webpack",
-    "build:dev": "npm run prebuild && webpack --mode development"
+    "postbuild": "npm run compress",
+    "compress": "node ../utils/compress.mjs --keep dist/*bundle*.dev.js"
   },
   "keywords": [],
   "author": "",

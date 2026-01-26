@@ -7,113 +7,96 @@ import CacheBusterPlugin from "../utils/BabelCacheBuster.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-function createConfig({ es6, filename, minify }) {
-  let babelPlugins = []
-  let babelTargets = { chrome: "100" }
-  if (!es6) {
-    // enable loose class definitions for es5 (e.g. with prototype assignments)
-    babelPlugins = [["@babel/plugin-transform-classes", { loose: true }],];
-    // Use a reasonably ok pre-es6 classes browser.
-    babelTargets = { chrome: "40" };
-  }
-  return {
-    entry: "./src/babylon-js-benchmark.mjs",
-    mode: "production",
-    devtool: "source-map",
-    target: ["web", es6 ? "es6" : "es5"],
-    output: {
-      path: path.resolve(__dirname, "dist"),
-      filename: filename,
-      library: {
-        name: "BabylonJSBenchmark",
-        type: "globalThis",
-      },
-      libraryTarget: "assign",
-      chunkFormat: "commonjs",
-    },
-    module: {
-      rules: [
-        {
-          test: /\.[cm]?js$/,
-          use: {
-            loader: "babel-loader",
-            options: {
-              presets: [
-                [
-                  "@babel/preset-env",
-                  { targets: babelTargets},
-                ],
-              ],
-              plugins: [
-                CacheBusterPlugin, ...babelPlugins
-              ],
+function createConfig({ filename, mode, target}) {
+    const isProd = mode === "production";
+    const babelPlugins = [];
+    const babelTargets = { chrome: "100" };
+    if (target === "es5") {
+        // enable loose class definitions for es5 (e.g. with prototype assignments)
+        babelPlugins = [["@babel/plugin-transform-classes", { loose: true }]];
+        // Use a reasonably ok pre-es6 classes browser.
+        babelTargets = { chrome: "40" };
+    }
+    return {
+        entry: "./src/babylon-js-benchmark.mjs",
+        mode,
+        devtool: isProd ? "source-map" : false,
+        target: ["web", target],
+        output: {
+            path: path.resolve(__dirname, "dist"),
+            filename: filename,
+            library: {
+                name: "BabylonJSBenchmark",
+                type: "globalThis",
             },
-          },
+            libraryTarget: "assign",
+            chunkFormat: "commonjs",
         },
-      ],
-    },
-    plugins: [
-      new LicenseFilePlugin({
-        outputFileName: "LICENSE.txt",
-      }),
-      new UnicodeEscapePlugin({
-        test: /\.(js|jsx|ts|tsx)$/, // Escape Unicode in JavaScript and TypeScript files
-      }),
-    ],
-    optimization: {
-      minimizer: [
-        new TerserPlugin({
-          extractComments: false,
-          terserOptions: {
-            mangle: minify,
-            format: {
-              // Keep this comment for cache-busting.
-              comments: /@preserve|@license|@cc_on|ThouShaltNotCache/i,
+        module: {
+            rules: [
+                {
+                    test: /\.[cm]?js$/,
+                    use: {
+                        loader: "babel-loader",
+                        options: {
+                            presets: [["@babel/preset-env", { targets: babelTargets }]],
+                            plugins: [CacheBusterPlugin, ...babelPlugins],
+                        },
+                    },
+                },
+            ],
+        },
+        plugins: [
+            new LicenseFilePlugin({
+                outputFileName: "LICENSE.txt",
+            }),
+            new UnicodeEscapePlugin({
+                test: /\.(js|jsx|ts|tsx)$/, // Escape Unicode in JavaScript and TypeScript files
+            }),
+        ],
+        optimization: {
+            minimizer: [
+                new TerserPlugin({
+                    extractComments: false,
+                    terserOptions: {
+                        mangle: isProd,
+                        format: {
+                            // Keep this comment for cache-busting.
+                            comments: /@preserve|@license|@cc_on|ThouShaltNotCache/i,
+                        },
+                    },
+                }),
+            ],
+        },
+        resolve: {
+            fallback: {
+                assert: "assert/",
+                fs: false,
+                path: "path-browserify",
             },
-          },
-        }),
-      ],
-    },
-    resolve: {
-      fallback: {
-        assert: "assert/",
-        fs: false,
-        path: "path-browserify",
-      },
-    },
-  };
+        },
+    };
 }
 
-export default (env, argv) => {
-  const isDevelopment = argv.mode === "development";
-
-  const nonMinifiedConfigs = [
+export default [
     createConfig({
-      es6: true,
-      filename: "bundle.es6.js",
-      minify: false,
+        filename: "bundle.es6.dev.js",
+        mode: "development",
+        target: "es6" 
     }),
     createConfig({
-      es6: false,
-      filename: "bundle.es5.js",
-      minify: false,
-    }),
-  ];
-
-  if (isDevelopment) {
-    return nonMinifiedConfigs;
-  }
-
-  return [
-    createConfig({
-      es6: true,
-      filename: "bundle.es6.min.js",
-      minify: true,
+        filename: "bundle.es5.dev.js",
+        mode: "development",
+        target: "es6" 
     }),
     createConfig({
-      es6: false,
-      filename: "bundle.es5.min.js",
-      minify: true,
+        filename: "bundle.es6.min.js",
+        mode: "production",
+        target: "es5" 
     }),
-  ];
-};
+    createConfig({
+        filename: "bundle.es5.min.js",
+        mode: "production",
+        target: "es5" 
+    }),
+];

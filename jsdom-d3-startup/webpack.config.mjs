@@ -8,10 +8,11 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function createConfig({ filename, minify }) {
+function createConfig({ filename, mode }) {
+  const isProd = mode === "production";
   return {
-    mode: "production",
-    devtool: "source-map",
+    mode,
+    devtool: isProd ? "source-map" : false,
     target: "web",
     entry: "./src/test.mjs",
     output: {
@@ -60,7 +61,7 @@ function createConfig({ filename, minify }) {
         new TerserPlugin({
           extractComments: false,
           terserOptions: {
-            mangle: minify,
+            mangle: isProd,
             format: {
               // Keep this comment for cache-busting.
               comments: /ThouShaltNotCache/i,
@@ -97,6 +98,6 @@ function createConfig({ filename, minify }) {
 };
 
 export default [
-  createConfig({ filename: "bundle.min.js", minify: true }),
-  createConfig({ filename: "bundle.js", minify: false })
+  createConfig({ filename: "bundle.min.js", mode: "production" }),
+  createConfig({ filename: "bundle.dev.js", mode: "development" })
 ];

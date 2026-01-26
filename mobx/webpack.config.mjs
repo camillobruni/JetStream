@@ -8,11 +8,12 @@ import CacheBusterCommentPlugin from "../utils/BabelCacheBuster.mjs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function config({ filename, minify, target }) {
+function config({ filename, mode, target }) {
+  const isProd = mode === "production";
   return {
     entry: "./src/test.mjs",
-    mode: "production",
-    devtool: "source-map",
+    mode,
+    devtool: isProd ? "source-map" : false,
     target: ["web", target],
     output: {
       path: path.resolve(__dirname, "dist"),
@@ -44,7 +45,7 @@ function config({ filename, minify, target }) {
       minimizer: [
         new TerserPlugin({
           terserOptions: {
-            mangle: minify,
+            mangle: isProd,
             format: {
               // Keep this comment for cache-busting.
               comments: /ThouShaltNotCache/i,
@@ -57,8 +58,8 @@ function config({ filename, minify, target }) {
 }
 
 export default [
-  config({ filename: "bundle.es6.min.js", minify: true, target: "es6" }),
-  config({ filename: "bundle.es6.js", minify: false, target: "es6" }),
-  config({ filename: "bundle.es5.min.js", minify: true, target: "es5" }),
-  config({ filename: "bundle.es5.js", minify: false, target: "es5" }),
+  config({ filename: "bundle.es6.min.js", mode: "production" , target: "es6" }),
+  config({ filename: "bundle.es6.dev.js", mode: "development", target: "es6" }),
+  config({ filename: "bundle.es5.min.js", mode: "production" , target: "es5" }),
+  config({ filename: "bundle.es5.dev.js", mode: "development", target: "es5" }),
 ];
