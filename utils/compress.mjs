@@ -31,12 +31,23 @@ import path from 'path';
 
 let log = console.log
 
+const GLOB_PRESETS = {
+    js: [
+        "dist/*.bundle*.dev.js",
+        "dist/*.js.map",
+    ],
+    wasm: [
+        // TODO
+    ]
+};
+const PRESET_CHOICES = Object.keys(GLOB_PRESETS).join(", ");
 function parseCommandLineArgs() {
     const optionDefinitions = [
         { name: 'decompress', alias: 'd', type: Boolean, description: 'Decompress files (default: compress).' },
         { name: 'keep', alias: 'k', type: Boolean, description: 'Keep input files after processing (default: delete).' },
         { name: 'help', alias: 'h', type: Boolean, description: 'Print this usage guide.' },
-         { name: 'quiet', alias: 'q', type: Boolean, description: 'Quite output, only print errors.' },
+        { name: 'quiet', alias: 'q', type: Boolean, description: 'Quite output, only print errors.' },
+        { name: 'preset', alias: 'p', type: String, description: `Default file glob presets [${PRESET_CHOICES}].` },
         { name: 'globs', type: String, multiple: true, defaultOption: true, description: 'Glob patterns of files to process.' },
     ];
     const options = commandLineArgs(optionDefinitions);
@@ -63,6 +74,18 @@ function parseCommandLineArgs() {
         log = () => {};
     }
 
+    if (options.preset) {
+        const preset_globs = GLOB_PRESETS[options.preset];
+        if (!preset_globs) {
+            console.error(
+                `Invalid preset "${options.preset}", choices are ${PRESET_CHOICES}`);
+            console.log(usage);
+            process.exit(1);
+        
+        }
+        options.globs = (options.globs ?? []).concat(preset_globs);
+    }
+    
     if (options.globs === undefined) {
         if (options.decompress) {
             const defaultGlob = '**/*.z';

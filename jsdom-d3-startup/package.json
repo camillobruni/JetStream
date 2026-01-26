@@ -5,7 +5,7 @@
     "prebuild": "npm run clean",
     "build": "webpack",
     "postbuild": "npm run compress",
-    "compress": "node ../utils/compress.mjs --keep dist/*bundle*.dev.js"
+    "compress": "node ../utils/compress.mjs --keep --preset=js"
   },
   "dependencies": {
     "@dapplets/unicode-escape-webpack-plugin": "^0.1.1",

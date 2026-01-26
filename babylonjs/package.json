@@ -9,7 +9,7 @@
     "build": "webpack",
     "build:data": "node build/build.mjs",
     "postbuild": "npm run compress",
-    "compress": "node ../utils/compress.mjs --keep dist/*bundle*.dev.js"
+    "compress": "node ../utils/compress.mjs --keep --preset=js"
   },
   "dependencies": {
     "@babel/core": "^7.28.3",

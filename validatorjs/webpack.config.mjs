@@ -7,7 +7,7 @@ import { LicenseWebpackPlugin } from "license-webpack-plugin";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function config({ filename, mode }) {
+function createConfig({ filename, mode }) {
   const isProd = mode === "production";
   return {
     entry: "./src/test.mjs",
@@ -32,12 +32,12 @@ function config({ filename, mode }) {
       })
     ],
     optimization: {
-      minimize: minify,
+      minimize: isProd,
     },
   };
 }
 
 export default [
-  config({ filename: "bundle.min.js", minify: true }),
-  config({ filename: "bundle.dev.js", minify: false }),
+  createConfig({ filename: "bundle.min.js", mode: "production" }),
+  createConfig({ filename: "bundle.dev.js", mode: "development" }),
 ];

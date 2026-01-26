@@ -9,8 +9,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function createConfig({ filename, mode, target}) {
     const isProd = mode === "production";
-    const babelPlugins = [];
-    const babelTargets = { chrome: "100" };
+    let babelPlugins = [];
+    let babelTargets = { chrome: "100" };
     if (target === "es5") {
         // enable loose class definitions for es5 (e.g. with prototype assignments)
         babelPlugins = [["@babel/plugin-transform-classes", { loose: true }]];

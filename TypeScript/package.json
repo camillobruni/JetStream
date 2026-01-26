@@ -10,7 +10,7 @@
     "prebuild": "npm run clean  && npm run import",
     "build": "webpack",
     "postbuild": "npm run compress",
-    "compress": "node ../utils/compress.mjs --keep dist/*bundle*.dev.js"
+    "compress": "node ../utils/compress.mjs --keep --preset=js"
   },
   "keywords": [],
   "author": "",
