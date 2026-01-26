@@ -109,11 +109,14 @@ function parseCliFlag(argument) {
         throw Error(message);
     }
     let value = parts.slice(1).join("=");
-    if (flagName === "no-prefetch") value = "false";
+    if (flagName.startsWith("no-")) value = "false";
     else if (value === "") value = "true";
     cliParams.set(CLI_PARAMS[flagName].param, value);
 }
 
+
+const printHelp = cliParams.delete("help");
+const dumpTestList = cliParams.delete("dumpTestList");
 
 if (cliArgs.length) {
     let tests = cliParams.has("test") ? cliParams.get("tests").split(",") : []
@@ -125,7 +128,6 @@ if (cliParams.size)
     globalThis.JetStreamParamsSource = cliParams;
 
 load("./utils/params.js");
-
 
 async function runJetStream() {
     try {
@@ -169,10 +171,11 @@ function help(message=undefined) {
     }
 }
 
-if (cliParams.has("help")) {
+
+if (printHelp) {
     help();
-} else if (cliParams.has("dumpTestList")) {
-  JetStream.dumpTestList();
+} else if (dumpTestList) {
+    JetStream.dumpTestList();
 } else {
-  runJetStream();
+    runJetStream();
 }
