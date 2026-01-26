@@ -2156,8 +2156,8 @@ let BENCHMARKS = [
         name: "validatorjs",
         files: [
             // Use the unminified version for easier local profiling.
-            // "./validatorjs/dist/bundle.es6.js",
-            "./validatorjs/dist/bundle.es6.min.js",
+            // "./validatorjs/dist/bundle.dev.js",
+            "./validatorjs/dist/bundle.min.js",
             "./validatorjs/benchmark.js",
         ],
         tags: ["default", "js",  "regexp"],
@@ -2328,7 +2328,7 @@ let BENCHMARKS = [
         ],
         preload: {
             // Debug Sources for nicer profiling.
-            // BUNDLE: "./mobx/dist/bundle.es6.js",
+            // BUNDLE: "./mobx/dist/bundle.es6.dev.js",
             BUNDLE: "./mobx/dist/bundle.es6.min.js",
         },
         tags: ["default", "js", "mobx", "startup", "es6"],
@@ -2385,7 +2385,7 @@ let BENCHMARKS = [
         name: "typescript-lib",
         files: [
             "./TypeScript/src/mock/sys.js",
-            "./TypeScript/dist/bundle.js",
+            "./TypeScript/dist/bundle.min.js",
             "./TypeScript/benchmark.js",
         ],
         preload: {
@@ -2732,7 +2732,7 @@ let BENCHMARKS = [
         name: "babylonjs-scene-es6",
         files: [
             // Use non-minified sources for easier profiling:
-            // "./babylonjs/dist/bundle.es6.js",
+            // "./babylonjs/dist/bundle.es6.dev.js",
             "./babylonjs/dist/bundle.es6.min.js",
             "./babylonjs/benchmark/scene.js",
         ],
@@ -3039,7 +3039,7 @@ BENCHMARKS.push(
         files: PRISM_JS_FILES,
         preload: {
             // Use non-minified bundle for better local profiling.
-            // BUNDLE: "./prismjs/dist/bundle.es6.js",
+            // BUNDLE: "./prismjs/dist/bundle.es6.dev.js",
             BUNDLE: "./prismjs/dist/bundle.es6.min.js",
             ...PRISM_JS_PRELOADS,
         },
