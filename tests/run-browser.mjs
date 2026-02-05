@@ -70,6 +70,13 @@ const TESTS = [
         run() {
             return runEnd2EndTest("Run Default Suite");
         }
+    },
+    {
+        name: "Verify In Depth Info",
+        tags: ["all", "in-depth"],
+        run() {
+            return runBrowserDriverTest("In Depth Page Check", inDepthPageTest);
+        }
     }
 ];
 
@@ -166,11 +173,12 @@ async function runTests() {
       process.exit(1);
 }
 
-async function runEnd2EndTest(name, params) {
-    return runTest(name, () => testEnd2End(params));
+
+async function runBrowserDriverTest(name, body) {
+    return runTest(name, () => runBrowserDriver(body))
 }
 
-async function testEnd2End(params) {
+async function runBrowserDriver(body) {
     const builder =  new Builder().withCapabilities(capabilities);
     if (browserOptions) {
         switch(BROWSER) {
@@ -188,28 +196,10 @@ async function testEnd2End(params) {
     const sessionId = (await driver.getSession()).getId();
     const driverCapabilities = await driver.getCapabilities();
     logInfo(`Browser: ${driverCapabilities.getBrowserName()} ${driverCapabilities.getBrowserVersion()}`);
-    const urlParams = Object.assign({
-            worstCaseCount: 2,
-            iterationCount: 3 
-        }, params);
-    let results;
     let success = true;
     try {
-        const url = new URL(`http://localhost:${PORT}/index.html`);
-        url.search = new URLSearchParams(urlParams).toString();
-        logInfo(`JetStream PREPARE ${url}`);
-        await driver.get(url.toString());
-        await driver.executeAsyncScript((callback) => {
-            // callback() is explicitly called without the default event
-            // as argument to avoid serialization issues with chromedriver.
-            globalThis.addEventListener("JetStreamReady", () => callback());
-            // We might not get a chance to install the on-ready listener, thus
-            // we also check if the runner is ready synchronously.
-            if (globalThis?.JetStream?.isReady)
-                callback();
-        });
-        results = await benchmarkResults(driver);
-        // FIXME: validate results;
+        await sleep(1000);
+        body(driver);
     } catch(e) {
         success = false;
         throw e;
@@ -221,6 +211,33 @@ async function testEnd2End(params) {
             await printLogs(sessionId);
         }
     }
+}
+
+async function runEnd2EndTest(name, params) {
+    return runBrowserDriverTest(name, (driver) => testEnd2End(driver, params));
+}
+
+async function testEnd2End(driver, params) {
+    const urlParams = Object.assign({
+            worstCaseCount: 2,
+            iterationCount: 3 
+        }, params);
+    let results;
+    const url = new URL(`http://localhost:${PORT}/index.html`);
+    url.search = new URLSearchParams(urlParams).toString();
+    logInfo(`JetStream PREPARE ${url}`);
+    await driver.get(url.toString());
+    await driver.executeAsyncScript((callback) => {
+        // callback() is explicitly called without the default event
+        // as argument to avoid serialization issues with chromedriver.
+        globalThis.addEventListener("JetStreamReady", () => callback());
+        // We might not get a chance to install the on-ready listener, thus
+        // we also check if the runner is ready synchronously.
+        if (globalThis?.JetStream?.isReady)
+            callback();
+    });
+    results = await benchmarkResults(driver);
+    // FIXME: validate results;
 }
 
 async function benchmarkResults(driver) {
@@ -236,6 +253,18 @@ async function benchmarkResults(driver) {
         return globalThis.JetStream.resultsJSON();
     });
     return JSON.parse(resultsJSON);
+}
+
+async function inDepthPageTest(driver) {
+    const url = `http://localhost:${PORT}/in-depth.html`;
+    logInfo(`JetStream PREPARE ${url}`);
+    await driver.get(url);
+    const ids = await driver.executeScript(() => {
+        return Array.from(document.querySelectorAll("#workload-details dt")).map(each => each.id);
+    });
+    const sortedIds = ids.sorted((a, b) => {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    })
 }
 
 class JetStreamTestError extends Error {
