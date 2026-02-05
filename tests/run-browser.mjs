@@ -198,8 +198,7 @@ async function runBrowserDriver(body) {
     logInfo(`Browser: ${driverCapabilities.getBrowserName()} ${driverCapabilities.getBrowserVersion()}`);
     let success = true;
     try {
-        await sleep(1000);
-        body(driver);
+        await body(driver);
     } catch(e) {
         success = false;
         throw e;
@@ -256,15 +255,42 @@ async function benchmarkResults(driver) {
 }
 
 async function inDepthPageTest(driver) {
-    const url = `http://localhost:${PORT}/in-depth.html`;
-    logInfo(`JetStream PREPARE ${url}`);
-    await driver.get(url);
+    await driver.get( `http://localhost:${PORT}/in-depth.html`);
     const ids = await driver.executeScript(() => {
-        return Array.from(document.querySelectorAll("#workload-details dt")).map(each => each.id);
+        return Array.from(document.querySelectorAll("#workload-details dt[id]")).map(each => each.id);
     });
-    const sortedIds = ids.sorted((a, b) => {
+    const sortedIds = ids.slice().sort((a, b) => {
         return a.toLowerCase().localeCompare(b.toLowerCase());
-    })
+    });
+    const sectionErrors = []
+    sortedIds.forEach((id, index) => {
+        if (id !== ids[index]) {
+            sectionErrors.push(
+                `Expected index ${index} to be '${id}' but got '${ids[index]}' `);
+        }
+    });
+    const idSet = new Set(ids);
+    await driver.get( `http://localhost:${PORT}/index.html?tags=all`);
+    const benchmarkNames = await driver.executeScript(() => {
+        return globalThis.JetStream.benchmarks.map(each => each.name);
+    });
+    benchmarkNames.sort((a,b) => {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    });
+
+    const missingIds = benchmarkNames.filter(name => !idSet.has(name));
+    if (missingIds.length > 0) {
+        sectionErrors.push(`Missing in-depth.html info section: ${JSON.stringify(missingIds, undefined, 2)}`);
+    }
+
+    const benchmarkNamesSet = new Set(benchmarkNames);
+    const unusedIds = sortedIds.filter(id => !benchmarkNamesSet.has(id)); 
+    if (unusedIds.length > 0) {
+        sectionErrors.push(`Unused in-depth.html info section: ${JSON.stringify(unusedIds, undefined, 2)}`);
+    }
+    if (sectionErrors.length > 0) {
+        throw new Error(`info section errors: ${sectionErrors.join("\n")}`);
+    }
 }
 
 class JetStreamTestError extends Error {
