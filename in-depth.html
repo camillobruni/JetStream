@@ -89,7 +89,7 @@
 
             <p>
                 All but one of JetStream 3's benchmarks run for N iterations, where N is often 120.
-                JetStream 3 reports the startup score as the time it takes to run the first iteration.
+                JetStream 3 calculates the startup score from the time it takes to run the first iteration.
                 The worst case score is the average of the worst M iterations, excluding the first iteration.
                 M is always less than N, and is usually 4.
                 The average case score is the average of all but the first iteration.
@@ -109,7 +109,7 @@
                 JetStream 3 includes parts of these benchmark suites that came before it:
                 <a href="https://webkit.org/perf/sunspider/sunspider.html">SunSpider</a>,
                 <a href="https://developers.google.com/octane/">Octane 2</a>,
-                <a href="https://browserbench.org/JetStream1.1/">JetStream 1</a>,
+                <a href="https://browserbench.org/JetStream2.1/">JetStream 2</a>,
                 <a href="https://browserbench.org/ARES-6/">ARES-6</a>,
                 <a href="https://v8.github.io/web-tooling-benchmark/">Web Tooling Benchmark</a>,
                 and benchmarks inspired by <a href="https://krakenbenchmark.mozilla.org">Kraken</a>.
@@ -118,18 +118,18 @@
             </p>
 
             <p>
-                JetStream 3 includes several benchmarks from earlier JetStream versions, but updates the benchmark
-                driver to improve score stability.
-                This is achieved by pre-fetching network resources prior to running the benchmarks.
-                This can reduce perturbations on the measurement of JavaScript execution time due to second order
-                effects of pause times induced by network latency.
-            </p>
-
-            <p>
                 Earlier versions of JetStream also contained asm.js workloads.
                 With the release of WebAssembly, developers should switch to that technology instead.
                 JetStream 3 thus contains no asm.js workloads any longer and has converted some of the prior ones into
                 WebAssembly.
+            </p>
+
+            <p>
+                Besides the aforementioned averaging over multiple iterations, the JetStream 3 benchmark driver also
+                tries to improve score stability by other means.
+                For example, it pre-fetches network resources prior to running the benchmarks.
+                This can reduce perturbations on the measurement of JavaScript execution time due to second order
+                effects of pause times induced by network latency.
             </p>
 
             <p>
@@ -144,13 +144,11 @@
             <dl id="workload-details">
                 <dt id="8bitbench-wasm">8bitbench-wasm</dt>
                 <dd>
-                    A simple 8-bit emulator targeting wasm, written in rust. It aims to represent what an emulator or
-                    small game might act like in the real world.
-                    <br>
-                    Attribution: See <a href="8bitbench/ABOUT.md">8bitbench/ABOUT.md</a>
-                    <br>
-                    Source code: <a href="8bitbench/js3harness.js">8bitbench/js3harness.js</a>, based off <a
-                        href="https://github.com/justinmichaud/8bitbench">https://github.com/justinmichaud/8bitbench</a>
+                    A simple 8-bit emulator targeting WebAssembly written in Rust. It aims to represent what an emulator
+                    or small game might act like in the real world.
+                    Attribution: See <a href="8bitbench/README.md">8bitbench/README.md</a>.
+                    Source code: In the <a href="8bitbench/">8bitbench/</a> directory, based off <a
+                        href="https://github.com/justinmichaud/8bitbench">https://github.com/justinmichaud/8bitbench</a>.
                 </dd>
                 <dt id="acorn-wtb">acorn-wtb</dt>
                 <dd>
@@ -181,9 +179,10 @@
                 <dt id="argon2-wasm">argon2-wasm</dt>
                 <dd>
                     Tests <a href="https://github.com/P-H-C/phc-winner-argon2">Argon2</a>, a password-hashing function
-                    (the winner of Password Hashing Competition), in WebAssembly. This is test is based on <a
-                        href="https://github.com/antelle/argon2-browser">argon2-browser</a> library. Source code: <a
-                        href="wasm/">ARGON2</a>.
+                    (the winner of Password Hashing Competition), in WebAssembly. It makes use of WebAssembly SIMD
+                    feature.
+                    This is test is based on <a href="https://github.com/antelle/argon2-browser">argon2-browser</a>
+                    library. Source code: In the <a href="wasm/argon2/">wasm/argon2/</a> directory.
                 </dd>
                 <dt id="async-fs">async-fs</dt>
                 <dd>
@@ -310,13 +309,17 @@
                     Source code: <a href="Octane/crypto.js">crypto.js</a>
                 </dd>
                 <dt id="Dart-flute-complex-wasm">Dart-flute-complex-wasm</dt>
-                <dd>TODO</dd>
                 <dt id="Dart-flute-todomvc-wasm">Dart-flute-todomvc-wasm</dt>
                 <dd>
-                    A Dart benchmark program compiled to WasmGC that is using the <i>Flutter</i> UI framework to render
-                    a TODO list application.
-                    For the purpose of this benchmark, the rendering is stubbed out, but the main computation is
-                    performed, e.g., to layout elements.
+                    Two Dart benchmark programs compiled to WasmGC that are using a simplified version of the Flutter UI
+                    framework to layout and animate UI elements.
+                    The <i>complex</i> variant contains a large number of widgets and is thus more of a stress test,
+                    disabled by default in JetStream 3.
+                    The <i>todomvc</i> variant is a more realistic TODO list application and enabled by default.
+                    See <a href="Dart/README.md">Dart/README.md</a> for more information.
+                    <br>
+                    Source code: in the <a href="Dart/">Dart/</a> directory, based off <a
+                        href="https://github.com/dart-lang/flute">https://github.com/dart-lang/flute</a>.
                 </dd>
                 <dt id="delta-blue">delta-blue</dt>
                 <dd>
@@ -327,18 +330,14 @@
                     Source code: <a href="Octane/deltablue.js">deltablue.js</a>
                 </dd>
                 <dt id="dotnet-aot-wasm">dotnet-aot-wasm</dt>
-                <dd>
-                    Tests <a href="https://github.com/dotnet/runtime">.NET on WebAssembly</a>. This benchmark tests
-                    operations
-                    on .NET implementation of String, JSON serialization, specifics of .NET exceptions and computation
-                    of a 3D scene using Mono AOT. Source code: <a href="wasm/dotnet">.NET</a>.
-                </dd>
                 <dt id="dotnet-interp-wasm">dotnet-interp-wasm</dt>
                 <dd>
-                    Tests <a href="https://github.com/dotnet/runtime">.NET on WebAssembly</a>. This benchmark tests
-                    operations
-                    on .NET implementation of String, JSON serialization, specifics of .NET exceptions and computation
-                    of a 3D scene using Mono Interpreter. Source code: <a href="wasm/dotnet">.NET</a>.
+                    These two workloads test <a href="https://github.com/dotnet/runtime">.NET on WebAssembly</a>.
+                    They contain a variety of operations on .NET strings, JSON serialization, specifics of .NET
+                    exceptions, and ray tracing of a 3D scene.
+                    The <i>aot</i> variant uses Mono AOT (ahead of time) compilation.
+                    The <i>interp</i> variant uses the Mono interpreter.
+                    Source code: In the <a href="wasm/dotnet/">wasm/dotnet/</a> directory.
                 </dd>
                 <dt id="doxbee-async">doxbee-async</dt>
                 <dd>
@@ -442,7 +441,11 @@
                 <dt id="intl">intl</dt>
                 <dd>TODO</dd>
                 <dt id="j2cl-box2d-wasm">j2cl-box2d-wasm</dt>
-                <dd>TODO</dd>
+                <dd>
+                    A Java Box2D benchmark that is compiled to WasmGC with the <a
+                        href="https://github.com/google/j2cl">J2CL</a> toolchain.
+                    Source code: In the <a href="wasm/j2cl-box2d/">wasm/j2cl-box2d/</a> directory.
+                </dd>
                 <dt id="js-tokens">js-tokens</dt>
                 <dd>
                     This benchmarks runs <a href="https://github.com/lydell/js-tokens">js-tokens</a>, a lenient and
@@ -469,7 +472,15 @@
                     Source code: <a href="SeaMonster/json-stringify-inspector.js">json-stringify-inspector.js</a>
                 </dd>
                 <dt id="Kotlin-compose-wasm">Kotlin-compose-wasm</dt>
-                <dd></dd>
+                <dd>
+                    This benchmark is a Kotlin application using the <a href="https://jb.gg/cmp">Compose
+                        Multiplatform</a> UI framework.
+                    Compose allows to share UI code across multiple platforms and is compiled with <a
+                        href="https://kotl.in/wasm">Kotlin/Wasm</a> to WasmGC.
+                    Source code: In the <a href="Kotlin-compose/">Kotlin-compose/</a> directory, based off the benchark
+                    in <a
+                        href="https://github.com/JetBrains/compose-multiplatform/tree/master/benchmarks/multiplatform">https://github.com/JetBrains/compose-multiplatform/</a>.
+                </dd>
                 <dt id="lazy-collections">lazy-collections</dt>
                 <dd>
                     This benchmark iterates over common integer sequences (fibonacci, prime numbers, etc) as lazy
@@ -478,13 +489,13 @@
                     generators.
                     Source code: <a href="generators/lazy-collections.js">lazy-collections.js</a>
                 </dd>
-                <dt id="lebab-wtb"></dt>
+                <dt id="lebab-wtb">lebab-wtb</dt>
                 <dd>
-                <a href="https://github.com/lebab/lebab">Lebab</a> transpiles ES5 code into ES6/ES7.
-                This benchmark runs Lebab on test JavaScript programs.
-                This benchmark stresses string manipulation and regular expression performance.
-                A similar version of this benchmark was previously published in the Web Tooling Benchmark.
-                Source code: <a href="web-tooling-benchmark/browser.js">lebab.js</a>
+                    <a href="https://github.com/lebab/lebab">Lebab</a> transpiles ES5 code into ES6/ES7.
+                    This benchmark runs Lebab on test JavaScript programs.
+                    This benchmark stresses string manipulation and regular expression performance.
+                    A similar version of this benchmark was previously published in the Web Tooling Benchmark.
+                    Source code: <a href="web-tooling-benchmark/browser.js">lebab.js</a>
                 </dd>
                 <dt id="mandreel">mandreel</dt>
                 <dd>
@@ -615,7 +626,8 @@
                 </dd>
                 <dt id="richards-wasm">richards-wasm</dt>
                 <dd>
-                    Martin Richard's <a href="http://www.cl.cam.ac.uk/~mr10/Bench.html">system language benchmark</a> compiled to a hybrid of WebAssembly and JavaScript.
+                    Martin Richard's <a href="http://www.cl.cam.ac.uk/~mr10/Bench.html">system language benchmark</a>
+                    compiled to a hybrid of WebAssembly and JavaScript.
                     It stresses how quickly JavaScript can call into WebAssembly code.
                     Source code: in the <a href="wasm/richards/">wasm/richardss/</a> directory.
                 </dd>
@@ -786,6 +798,7 @@
                     Source code: <a href="generators/sync-file-system.js">sync-file-system.js</a>
                 </dd>
                 <dt id="tfjs-wasm">tfjs-wasm</dt>
+                <dt id="tfjs-wasm-simd">tfjs-wasm-simd</dt>
                 <dd>
                     Tests <a href="https://github.com/tensorflow/tfjs">Tensorflow.js</a> pre-trained machine learning
                     models supported by <a
@@ -795,16 +808,28 @@
                     <a href="https://www.npmjs.com/package/@tensorflow-models/knn-classifier">knn-classifier</a>, <a
                         href="https://www.npmjs.com/package/@tensorflow-models/coco-ssd">coco-ssd</a>, <a
                         href="https://www.npmjs.com/package/@tensorflow-models/universal-sentence-encoder">universal-sentence-encoder</a>.
-                    Source code: <a href="wasm/">TFJS</a>.
+                    The <i>SIMD</i> variant uses vector instructions from the Wasm SIMD feature.
+                    Source code: tfjs-* files in the <a href="wasm/">wasm/</a> directory.
                 </dd>
-                <dt id="tfjs-wasm-simd">tfjs-wasm-simd</dt>
-                <dd>TODO</dd>
                 <dt id="threejs">threejs</dt>
                 <dd></dd>
-                <dt id="transformersjs-bert-wasm">transformersjs-bert-wasm"</dt>
-                <dd>TODO</dd>
+                <dt id="transformersjs-bert-wasm">transformersjs-bert-wasm</dt>
                 <dt id="transformersjs-whisper-wasm">transformersjs-whisper-wasm</dt>
-                <dd>TODO</dd>
+                <dd>
+                    Two machine learning tasks using the <a
+                        href="https://huggingface.co/docs/transformers.js/en/index">Transformers.js</a> library, which
+                    uses <a href="https://onnxruntime.ai/docs/tutorials/web/">ONNX Runtime Web</a> under the hood to
+                    perform inference with WebAssembly. They make use of WebAssembly SIMD instructions.
+                    The <i>bert</i> variant uses the <a
+                        href="https://huggingface.co/Xenova/distilbert-base-uncased-finetuned-sst-2-english">distilbert-base-uncased-finetuned-sst-2-english</a>
+                    model to perform sentiment analysis of text.
+                    The <i>whisper</i> variant uses <a
+                        href="https://huggingface.co/Xenova/whisper-tiny.en">whisper-tiny.en</a> to transcribe audio to
+                    text.
+                    Source code: in the <a href="transformersjs/">transformersjs/</a> directory.
+                </dd>
+
+                <dd>
                 <dt id="tsf-wasm">tsf-wasm</dt>
                 <dd>
                     Runs Filip Pizlo's &mdash; of the WebKit team &mdash; implementation of a <a
@@ -845,7 +870,12 @@
                     Source code: <a href="WSL">WSL</a>
                 </dd>
                 <dt id="zlib-wasm">zlib-wasm</dt>
-                <dd>zlib-wasm</dd>
+                <dd>
+                    This workload compresses and decompresses a WebAssembly binary file using the <a
+                        href="https://www.zlib.net/">zlib</a>
+                    library, compiled to WebAssembly via <a href="https://emscripten.org">Emscripten</a>.
+                    Source code: In the <a href="wasm/zlib/">wasm/zlib/</a> directory.
+                </dd>
             </dl>
 
             <p><a href="index.html" class="button">&larr; Return to Tests</a></p>
