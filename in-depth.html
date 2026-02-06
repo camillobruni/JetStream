@@ -43,80 +43,75 @@
         <h2>In-Depth Analysis</h2>
 
         <p>
-        JetStream 3 combines together a variety of JavaScript and WebAssembly benchmarks, covering a variety of
-        advanced workloads and programming techniques, and reports a single score that
-        balances them using a geometric mean.
+        JetStream 3 combines together a variety of JavaScript and WebAssembly benchmarks, covering a variety of advanced workloads and programming techniques, and reports a single score that balances them using the geometric mean.
         </p>
 
         <p>
-        Each benchmark measures a distinct workload, and no single optimization
-        technique is sufficient to speed up all benchmarks. Some benchmarks demonstrate tradeoffs, and
-        aggressive or specialized optimizations for one benchmark might make another benchmark slower.
+        Each benchmark measures a distinct workload, and no single optimization technique is sufficient to speed up all benchmarks.
+        Some benchmarks demonstrate tradeoffs, and aggressive or specialized optimizations for one benchmark might make another benchmark slower.
         JetStream 3 rewards browsers that start up quickly, execute code quickly, and continue running smoothly.
         </p>
 
         <p>
         Each benchmark in JetStream 3 computes its own individual score.
-        Scores in JetStream are dimensionless floats, where a higher score is better.
+        Scores in JetStream are dimensionless floating point numbers, where a higher score is better.
         JetStream weighs each benchmark equally, taking the <a href="https://en.wikipedia.org/wiki/Geometric_mean">geometric mean</a> over each individual benchmark's score to compute the overall JetStream 3 score.
         The geometric mean ensures that a multiplicative improvement of any individual score has the same effect on the aggregated score, regardless of the absolute value of the individual score.
-        For example, an improvement by 5% of the sub score of benchmark A has the same effect on the total score as an improvement by 5% of the sub score of benchmark B.
+        For example, an improvement by 5% of the sub score of benchmark A has the same effect on the total score as an improvement by 5% of the sub score of benchmark B, even if A ran for a shorter time than B.
         </p>
 
         <p>
         It's not enough to just measure the total running time of a workload.
-        Browsers may perform differently for the same JavaScript workload depending on how many times it
-        has run. For example, garbage collection runs periodically, making some iterations take longer than
-        others. Code that runs repeatedly gets optimized by the browser, so the first iteration
-        of any workload is usually more expensive than the rest.
+        Browsers may perform differently for the same workload depending on how many times it has run.
+        For example, garbage collection runs periodically, making some iterations take longer than others.
+        Code that runs repeatedly gets optimized by the browser, so the first iteration of any workload is usually more expensive than the rest.
         </p>
 
         <p>
-        For most of the JavaScript and WebAssembly benchmarks in JetStream 3, individual scores
-        equally weigh startup performance, worst case performance, and average case
-        performance. These three metrics are crucial to running performant JavaScript
-        in the browser. Fast startup times lead browsers to loading pages more quickly. Good
-        worst case performance ensures web applications can run without hiccups. Fast average
-        case performance makes it so that the most advanced web applications can run at all.
+        For most of the JavaScript and WebAssembly benchmarks in JetStream 3, individual scores equally weigh startup performance, worst case performance, and average case performance.
+        These three metrics are crucial to running performant JavaScript and WebAssembly in the browser.
+        Fast startup times lead browsers to loading pages more quickly.
+        Good worst case performance ensures web applications can run without hiccups.
+        Fast average case performance makes it so that the most advanced web applications can run at all.
         </p>
 
         <p>
-        An important component of JetStream 1 were the asm.js subset of benchmarks. With the release
-        of WebAssembly, the importance of asm.js has lessened since many users of asm.js are
-        now using WebAssembly. JetStream 3 has converted many of the asm.js benchmarks from
-        JetStream 1 into WebAssembly.
-        </p>
-
-        <p>
-        All but one of JetStream 3's JavaScript benchmarks run for N iterations, where
-        N is usually 120. JetStream 3 reports the startup score as the time it takes to run the first iteration.
+        All but one of JetStream 3's benchmarks run for N iterations, where N is often 120.
+        JetStream 3 reports the startup score as the time it takes to run the first iteration.
         The worst case score is the average of the worst M iterations, excluding the first iteration.
-        M is always less than N, and is usually 4. The average case score is the average
-        of all but the first iteration. These three scores are weighed equally using the geometric
-        mean.
+        M is always less than N, and is usually 4.
+        The average case score is the average of all but the first iteration.
+        These three scores are weighed equally using the geometric mean.
         </p>
 
         <p>
-        JetStream 3 also includes a JavaScript benchmark named WSL. WSL is an implementation of a
-        GPU shading language written in JavaScript. WSL does not use the above mechanism for scoring
-        because it has a long running time. Instead, the WSL benchmark computes its score as the
-        geometric mean over two metrics: the time it takes to compile the WSL standard library, and the time
-        it takes to run through the WSL specification test suite.
+        JetStream 3 also includes a JavaScript benchmark named WSL.
+        WSL is an implementation of a GPU shading language written in JavaScript.
+        WSL does not use the above mechanism for scoring because it has a long running time.
+        Instead, the WSL benchmark computes its score as the geometric mean over two metrics: the time it takes to compile the WSL standard library, and the time it takes to run through the WSL specification test suite.
         </p>
 
         <p>
-        JetStream 3 includes parts of these benchmark suites that came before it: <a href="https://webkit.org/perf/sunspider/sunspider.html">SunSpider</a>,
-        <a href="https://developers.google.com/octane/">Octane 2</a>, <a href="https://browserbench.org/JetStream1.1/">JetStream 1</a>,
-        <a href="https://browserbench.org/ARES-6/">ARES-6</a>, <a href="https://v8.github.io/web-tooling-benchmark/">Web Tooling Benchmark</a>, and benchmarks inspired by <a href="https://krakenbenchmark.mozilla.org">Kraken</a>.
-        JetStream 3 also includes a new set of benchmarks that measure the performance of WebAssembly, Web Workers,
-        Promises, async iteration, unicode regular expressions, and JavaScript parsing.
+        JetStream 3 includes parts of these benchmark suites that came before it:
+        <a href="https://webkit.org/perf/sunspider/sunspider.html">SunSpider</a>,
+        <a href="https://developers.google.com/octane/">Octane 2</a>,
+        <a href="https://browserbench.org/JetStream1.1/">JetStream 1</a>,
+        <a href="https://browserbench.org/ARES-6/">ARES-6</a>,
+        <a href="https://v8.github.io/web-tooling-benchmark/">Web Tooling Benchmark</a>,
+        and benchmarks inspired by <a href="https://krakenbenchmark.mozilla.org">Kraken</a>.
+        JetStream 3 also includes a new set of benchmarks that measure the performance of WebAssembly, Web Workers, Promises, async iteration, unicode regular expressions, and JavaScript parsing.
         </p>
 
         <p>
-        JetStream 3 includes several benchmarks from earlier JetStream versions, but updates the benchmark driver to
-        improve score stability. This is achieved by pre-fetching network resources prior to running
-        the benchmarks. This can reduce perturbations on the measurement of JavaScript execution
-        time due to second order effects of pause times induced by network latency.
+        JetStream 3 includes several benchmarks from earlier JetStream versions, but updates the benchmark driver to improve score stability.
+        This is achieved by pre-fetching network resources prior to running the benchmarks.
+        This can reduce perturbations on the measurement of JavaScript execution time due to second order effects of pause times induced by network latency.
+        </p>
+
+        <p>
+        Earlier versions of JetStream also contained asm.js workloads.
+        With the release of WebAssembly, developers should switch to that technology instead.
+        JetStream 3 thus contains no asm.js workloads any longer and has converted some of the prior ones into WebAssembly.
         </p>
 
         <p>
@@ -125,7 +120,7 @@
         </p>
 
         <h3>
-        JetStream 3 has 64 subtests:
+        JetStream 3 has 77 subtests:
         </h3>
 
         <dl>
@@ -167,9 +162,9 @@
 
         <dt id="tsf-wasm">tsf-wasm</dt>
         <dd>
-         Runs Filip Pizlo's &mdash; of the WebKit team &mdash; implementation of a <a href="http://www.filpizlo.com/tsf/"> Typed Stream Format </a>
-         in WebAssembly. The original code is compiled from C to WebAssembly using <a href="https://emscripten.org">Emscripten</a>.
-         Source code: <a href="wasm/TSF">TSF</a>
+         Runs Filip Pizlo's &mdash; of the WebKit team &mdash; implementation of a <a href="http://www.filpizlo.com/tsf/">Typed Stream Format</a> in WebAssembly.
+         The original code is compiled from C to WebAssembly using <a href="https://emscripten.org">Emscripten</a>.
+         Source code: in the <a href="wasm/TSF/">wasm/TSF/</a> directory.
         </dd>
 
         <dt id="tfjs-wasm">tfjs-wasm</dt>
@@ -246,9 +241,25 @@
         <dt id="richards-wasm">richards-wasm</dt>
         <dd>
          Martin Richard's <a href="http://www.cl.cam.ac.uk/~mr10/Bench.html">system language
-         benchmark</a> compiled to a hybrid of WebAssembly and JavaScript. It stresses how quickly
-         JavaScript can call into WebAssembly code.
-         Source code: <a href="wasm/richards.c">richards.c</a>, <a href="wasm/richards.js">richards.js</a>
+         benchmark</a> compiled to a hybrid of WebAssembly and JavaScript.
+         It stresses how quickly JavaScript can call into WebAssembly code.
+         Source code: in the <a href="wasm/richards/">wasm/richardss/</a> directory.
+        </dd>
+
+        <dt id="sqlite3-wasm">sqlite3-wasm</dt>
+        <dd>
+         A WebAssembly build of <a href="https://sqlite.org/index.html">SQLite</a>'s <i>speedtest1.c</i> benchmark program.
+         Quoting from <a href="https://sqlite.org/cpu.html">its description</a>:
+         "This program strives to exercise the SQLite library in a way that is typical of real-world applications."
+         Since SQLite is a very widely used database and provides an official and popular upstream WebAssembly port, this is a realistic, larger WebAssembly program.
+         See <a href="sqlite3/README.md">README.md</a> for more information.
+         Source code: in the <a href="sqlite3/">sqlite3/</a> directory.
+        </dd>
+
+        <dt id="Dart-flute-todomvc-wasm">Dart-flute-todomvc-wasm</dt>
+        <dd>
+         A Dart benchmark program compiled to WasmGC that is using the <i>Flutter</i> UI framework to render a TODO list application.
+         For the purpose of this benchmark, the rendering is stubbed out, but the main computation is performed, e.g., to layout elements.
         </dd>
 
         <dt id="8bitbench-wasm">8bitbench-wasm</dt>

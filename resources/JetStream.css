@@ -228,6 +228,7 @@ article {
     display: flex;
     flex-direction: column;
     gap: var(--gap);
+    padding-bottom: var(--gap);
 }
 h1 {
     color: var(--text-color-primary);
