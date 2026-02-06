@@ -28,7 +28,7 @@
     --color-secondary: #86d9ff;
     --text-color-inverse: white;
     --text-color-primary: black;
-    --text-color-secondary: #555555;
+    --text-color-secondary: #303030;
     --text-color-tertiary: #444444;
     --text-color-subtle: #6c6c71;
     --text-color-very-subtle: #8e8e93;
@@ -269,12 +269,22 @@ dt {
     margin-top: 10px;
     font-weight: bold;
     text-align: left;
+    color: var(--text-color-secondary);
+}
+
+dt.non-default {
+    color: var(--text-color-very-subtle);
+}
+
+dt.non-default:after {
+    content: " (not run by default)";
 }
 
 dd {
     text-align: left;
     padding: 10px 20px;
     margin: 0;
+    color: var(--text-color-secondary);
 }
 
 a:link,
