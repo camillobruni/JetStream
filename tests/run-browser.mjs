@@ -1,28 +1,31 @@
 #! /usr/bin/env node
 /* eslint-disable-next-line  no-unused-vars */
 
-// Copyright (C) 2007-2025 Apple Inc. All rights reserved.
-
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions
-// are met:
-// 1. Redistributions of source code must retain the above copyright
-//  notice, this list of conditions and the following disclaimer.
-// 2. Redistributions in binary form must reproduce the above copyright
-//  notice, this list of conditions and the following disclaimer in the
-//  documentation and/or other materials provided with the distribution.
-
-// THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
-// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-// THE POSSIBILITY OF SUCH DAMAGE.
+/*
+ * Copyright (C) 2025 Apple Inc. All rights reserved.
+ * Copyright 2025 Google LLC
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 import { serve, optionDefinitions as serverOptionDefinitions } from "./server.mjs";
 import { Builder, Capabilities, logging } from "selenium-webdriver";
@@ -54,7 +57,7 @@ const TESTS = [
         name: "Run Tag No Prefetch",
         tags: ["all", "main"],
         run() {
-            return runEnd2EndTest("Run Tag No Prefetch",  { tag: "proxy", prefetchResources: "false" });
+            return runEnd2EndTest("Run Tag No Prefetch", { tag: "proxy", prefetchResources: "false" });
         }
     },
     {
@@ -173,13 +176,12 @@ async function runTests() {
       process.exit(1);
 }
 
-
 async function runBrowserDriverTest(name, body) {
     return runTest(name, () => runBrowserDriver(body))
 }
 
 async function runBrowserDriver(body) {
-    const builder =  new Builder().withCapabilities(capabilities);
+    const builder = new Builder().withCapabilities(capabilities);
     if (browserOptions) {
         switch(BROWSER) {
             case "firefox":
@@ -255,7 +257,7 @@ async function benchmarkResults(driver) {
 }
 
 async function inDepthPageTest(driver) {
-    await driver.get( `http://localhost:${PORT}/in-depth.html`);
+    await driver.get(`http://localhost:${PORT}/in-depth.html`);
     const descriptions = await driver.executeScript(() => {
         return Array.from(document.querySelectorAll("#workload-details dt[id]")).map(each => {
             return [each.id, { text: each.textContent, cssClass: each.className }];
@@ -282,7 +284,7 @@ async function inDepthPageTest(driver) {
         }
     });
 
-    await driver.get( `http://localhost:${PORT}/index.html?tags=all`);
+    await driver.get(`http://localhost:${PORT}/index.html?tags=all`);
     const benchmarkData = await driver.executeScript(() => {
         return globalThis.JetStream.benchmarks.map(each => [each.name, Array.from(each.tags)]);
     }).then(entries => new Map(entries));
@@ -325,7 +327,7 @@ class JetStreamTestError extends Error {
 const UPDATE_INTERVAL = 250;
 async function pollResultsUntilDone(driver, resolve, reject) {
     const previousResults = new Set();
-    const intervalId = setInterval(async function logResult()  {
+    const intervalId = setInterval(async function logResult() {
         const {done, errors, resultsJSON} = await driver.executeScript(() => {
             return {
                 done: globalThis.JetStream.isDone,
