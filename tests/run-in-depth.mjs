@@ -90,7 +90,7 @@ async function setUp() {
     return { document, definedBenchmarks, inDepthBenchmarks };
 }
 
-function checkHasAnyBenchmarks({ definedBenchmarks}) {
+function checkHasAnyBenchmarks({ definedBenchmarks }) {
     if (definedBenchmarks.length == 0) {
         throw new Error("No benchmarks defined");
     }
@@ -128,14 +128,10 @@ async function checkRelativeLinks({ document }) {
         const links = dd.querySelectorAll("a[href]");
         links.forEach((link) => {
             const href = link.getAttribute("href");
-            if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("#")) {
+            if (href.startsWith("http")) {
                 return;
             }
-
-            // Handle anchors in file paths (e.g. "foo.html#bar") and query params
-            const relativePath = href.split("#")[0].split("?")[0];
-            const filePath = path.join(rootDir, relativePath);
-
+            const filePath = path.join(rootDir, href);
             if (!fs.existsSync(filePath)) {
                 errors.push(
                     `Broken link in in-depth.html: '${href}' (resolved to '${filePath}') does not exist.`
