@@ -142,7 +142,8 @@
             </h3>
 
             <p>
-                The <span style="color: var(--text-color-very-subtle);">greyed-out workloads</span> are not run by default but can be manually enabled on the command-line or via
+                The <span style="color: var(--text-color-very-subtle);">greyed-out workloads</span> are not run by
+                default but can be manually enabled on the command-line or via
                 the <i>testList</i> URL parameter.
             </p>
 
@@ -199,7 +200,16 @@
                 </dd>
                 <dt id="babel-minify-wtb">babel-minify-wtb</dt>
                 <dt id="babel-wtb">babel-wtb</dt>
-                <dd>TODO</dd>
+                <dd>
+                    <a href="https://babeljs.io/">Babel</a> is a transpiler that compiles modern JavaScript (i.e. ES2015
+                    and later) to an older JavaScript dialect (i.e. ES3 or ES5) that is understood by a broad set of
+                    browsers. This benchmark runs the Babel transformation logic using the <code>es2015</code> preset.
+                    <a href="https://github.com/babel/minify">Babel Minify</a> is an ES2015+ aware minifier based on the
+                    Babel toolchain. This benchmark stresses the Babel minifier on a large JavaScript source.
+                    A similar version of this benchmark was previously published in the Web Tooling Benchmark.
+                    Source code: <a href="web-tooling-benchmark/browser.js">babel.js</a>, <a
+                        href="web-tooling-benchmark/browser.js">babel-minify.js</a>
+                </dd>
                 <dt id="Babylon">Babylon</dt>
                 <dd>
                     <a href="https://github.com/babel/babylon">Babylon</a> is an implementation of a parser for the
@@ -227,7 +237,15 @@
                 <dt id="babylonjs-scene-es6">babylonjs-scene-es6</dt>
                 <dt id="babylonjs-startup-es5" class="non-default">babylonjs-startup-es5</dt>
                 <dt id="babylonjs-startup-es6">babylonjs-startup-es6</dt>
-                <dd>TODO</dd>
+                <dd>
+                    These benchmarks test the <a href="https://www.babylonjs.com/">Babylon.js</a> 3D engine.
+                    The <i>startup</i> variant measures the time it takes for the engine to initialize and parse its
+                    bundled source.
+                    The <i>scene</i> variant measures the rendering performance of a complex 3D scene with models,
+                    animations, and particles.
+                    The <i>es5</i> and <i>es6</i> variants use code transpiled to ES5 or native ES6, respectively.
+                    Source code: in the <a href="babylonjs/">babylonjs/</a> directory.
+                </dd>
                 <dt id="Basic">Basic</dt>
                 <dd>
                     Basic is an ES2015 implementation of the <a
@@ -387,7 +405,13 @@
                     Source code: <a href="web-tooling-benchmark/browser.js">espree.js</a>
                 </dd>
                 <dt id="esprima-next-wtb">esprima-next-wtb</dt>
-                <dd></dd>
+                <dd>
+                    <a href="https://github.com/jquery/esprima">Esprima</a> is a high performance, standard-compliant
+                    ECMAScript parser. <code>esprima-next</code> is a fork that supports newer ECMAScript features. This
+                    benchmark runs both the tokenizer and the parser on a variety of common scripts.
+                    A similar version of this benchmark was previously published in the Web Tooling Benchmark.
+                    Source code: <a href="web-tooling-benchmark/browser.js">esprima-next.js</a>
+                </dd>
                 <dt id="first-inspector-code-load">first-inspector-code-load</dt>
                 <dd>
                     Measures the first-time parsing of a modern JavaScript code base: WebKit's Web Inspector.
@@ -444,7 +468,13 @@
                     Source code: <a href="wasm/HashSet.cpp">HashSet.cpp</a>, <a href="wasm/HashSet.js">HashSet.js</a>
                 </dd>
                 <dt id="intl" class="non-default">intl</dt>
-                <dd>TODO</dd>
+                <dd>
+                    This benchmark tests the performance of the ECMAScript Internationalization API (<a
+                        href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl">Intl</a>).
+                    It exercises various features including DateTimeFormat, NumberFormat, ListFormat, PluralRules, and
+                    RelativeTimeFormat across different locales and options.
+                    Source code: in the <a href="intl/">intl/</a> directory.
+                </dd>
                 <dt id="j2cl-box2d-wasm">j2cl-box2d-wasm</dt>
                 <dd>
                     A Java Box2D benchmark that is compiled to WasmGC with the <a
@@ -461,7 +491,13 @@
                     Source code: <a href="generators/js-tokens.js">js-tokens.js</a>
                 </dd>
                 <dt id="jsdom-d3-startup">jsdom-d3-startup</dt>
-                <dd>TODO</dd>
+                <dd>
+                    This benchmark measures the startup and execution time of a workload that uses <a
+                        href="https://github.com/jsdom/jsdom">jsdom</a> to simulate a browser environment and <a
+                        href="https://d3js.org/">D3</a> to render a Voronoi diagram of airports overlaid on a map of the
+                    US.
+                    Source code: in the <a href="jsdom-d3-startup/">jsdom-d3-startup/</a> directory.
+                </dd>
                 <dt id="json-parse-inspector">json-parse-inspector</dt>
                 <dd>
                     Measures JSON.parse performance on a set of objects that WebKit's Web Inspector
@@ -521,7 +557,13 @@
                     Source code: <a href="ARES-6/ml">ML</a>
                 </dd>
                 <dt id="mobx-startup">mobx-startup</dt>
-                <dd></dd>
+                <dd>
+                    This benchmark measures the startup and execution time of a workload using <a
+                        href="https://mobx.js.org/">MobX</a> for state management. It simulates a chat application model
+                    with messages, notifications, and rooms, stressing the performance of reactive data structures and
+                    observers.
+                    Source code: in the <a href="mobx/">mobx/</a> directory.
+                </dd>
                 <dt id="multi-inspector-code-load">multi-inspector-code-load</dt>
                 <dd>
                     Measures the repeated parsing of a modern JavaScript code base: WebKit's Web Inspector.
@@ -559,12 +601,30 @@
                     Source code: <a href="Octane/pdfjs.js">pdfjs.js</a>
                 </dd>
                 <dt id="postcss-wtb">postcss-wtb</dt>
-                <dd>TODO</dd>
+                <dd>
+                    <a href="https://postcss.org/">PostCSS</a> is a tool for transforming styles with JS plugins. These
+                    plugins can lint your CSS, support variables and mixins, transpile future CSS syntax, and more. This
+                    benchmark runs the PostCSS processor with several common plugins, such as Autoprefixer, on large CSS
+                    bundles.
+                    A similar version of this benchmark was previously published in the Web Tooling Benchmark.
+                    Source code: <a href="web-tooling-benchmark/browser.js">postcss.js</a>
+                </dd>
                 <dt id="prettier-wtb">prettier-wtb</dt>
-                <dd>TODO</dd>
+                <dd>
+                    <a href="https://prettier.io/">Prettier</a> is an opinionated code formatter which ensures that all
+                    outputted code conforms to a consistent style. This benchmark runs Prettier on various JavaScript
+                    and JSX files to measure its formatting throughput.
+                    A similar version of this benchmark was previously published in the Web Tooling Benchmark.
+                    Source code: <a href="web-tooling-benchmark/browser.js">prettier.js</a>
+                </dd>
                 <dt id="prismjs-startup-es5" class="non-default">prismjs-startup-es5</dt>
                 <dt id="prismjs-startup-es6">prismjs-startup-es6</dt>
-                <dd>TODO</dd>
+                <dd>
+                    These benchmarks measure the performance of the <a href="https://prismjs.com/">PrismJS</a> syntax
+                    highlighting library by parsing and formatting sample files in various programming languages. The
+                    <i>es5</i> and <i>es6</i> variants use code transpiled to ES5 or native ES6, respectively.
+                    Source code: in the <a href="prismjs/">prismjs/</a> directory.
+                </dd>
                 <dt id="proxy-mobx">proxy-mobx</dt>
                 <dd>
                     A super minimal, store-only implementation of Reminders.app, written in MobX.
@@ -646,7 +706,14 @@
                     Source code: <a href="worker/segmentation.js">segmentation.js</a>
                 </dd>
                 <dt id="source-map-wtb">source-map-wtb</dt>
-                <dd>TODO</dd>
+                <dd>
+                    The <a href="https://github.com/mozilla/source-map">source-map</a> library is developed by Mozilla
+                    to generate and consume source maps, which are used by browsers to display original source code when
+                    debugging minified applications. This benchmark stresses the source-map tool on both parsing and
+                    serializing a variety of different source maps.
+                    A similar version of this benchmark was previously published in the Web Tooling Benchmark.
+                    Source code: <a href="web-tooling-benchmark/browser.js">source-map.js</a>
+                </dd>
                 <dt id="splay">splay</dt>
                 <dd>
                     Tests the manipulation of <a href="http://en.wikipedia.org/wiki/Splay_tree">splay trees</a>
@@ -817,7 +884,13 @@
                     Source code: tfjs-* files in the <a href="wasm/">wasm/</a> directory.
                 </dd>
                 <dt id="threejs">threejs</dt>
-                <dd></dd>
+                <dd>
+                    This benchmark measures the performance of a 3D particle system implemented with <a
+                        href="https://threejs.org/">Three.js</a>. It animates 8,000 particles with custom geometries and
+                    basic materials, stressing object creation, scene graph updates, and the browser's 3D rendering
+                    capabilities.
+                    Source code: in the <a href="threejs/">threejs/</a> directory.
+                </dd>
                 <dt id="transformersjs-bert-wasm">transformersjs-bert-wasm</dt>
                 <dt id="transformersjs-whisper-wasm" class="non-default">transformersjs-whisper-wasm</dt>
                 <dd>
@@ -834,7 +907,6 @@
                     Source code: in the <a href="transformersjs/">transformersjs/</a> directory.
                 </dd>
 
-                <dd>
                 <dt id="tsf-wasm">tsf-wasm</dt>
                 <dd>
                     Runs Filip Pizlo's &mdash; of the WebKit team &mdash; implementation of a <a
@@ -845,14 +917,19 @@
                 </dd>
                 <dt id="typescript-lib">typescript-lib</dt>
                 <dd>
-                    Tests how quickly Microsoft's <a href="http://www.typescriptlang.org">TypeScript</a> compiler can
-                    compile itself. More than anything else, this tests how quickly a JavaScript runtime can optimize
-                    a large pile of code.
-                    A similar version of this benchmark was previously published in Octane version 2.
-                    Source code: <a href="Octane/typescript.js">typescript.js</a>
+                    Tests how quickly a modern version of Microsoft's <a
+                        href="http://www.typescriptlang.org">TypeScript</a> compiler can compile several popular
+                    frameworks. This benchmark stresses the performance of a large-scale JavaScript application using
+                    modern language features and complex data structures.
+                    Source code: in the <a href="TypeScript/">TypeScript/</a> directory.
                 </dd>
                 <dt id="typescript-octane" class="non-default">typescript-octane</dt>
-                <dd>TODO</dd>
+                <dd>
+                    The original <a href="https://developers.google.com/octane/">Octane</a> version of the TypeScript
+                    benchmark. It measures the time it takes the TypeScript compiler to compile a large input file,
+                    stressing the performance of a large-scale JavaScript application with complex data structures.
+                    Source code: <a href="Octane/typescript.js">typescript.js</a>
+                </dd>
                 <dt id="UniPoker">UniPoker</dt>
                 <dd>
                     UniPoker is a 5 card stud poker simulation using the Unicode playing card code points,
@@ -864,9 +941,19 @@
                     Source code: <a href="RexBench/UniPoker/poker.js">poker.js</a>
                 </dd>
                 <dt id="validatorjs">validatorjs</dt>
-                <dd>TODO</dd>
+                <dd>
+                    Measures the performance of the <a
+                        href="https://github.com/validatorjs/validator.js">validator.js</a> library by running a
+                    comprehensive test suite of string validation and sanitization.
+                    Source code: in the <a href="validatorjs/">validatorjs/</a> directory.
+                </dd>
                 <dt id="web-ssr">web-ssr</dt>
-                <dd>TODO</dd>
+                <dd>
+                    This benchmark measures the performance of server-side rendering (SSR) using <a
+                        href="https://reactjs.org/">React</a>. It renders a complex component tree to a string,
+                    simulating the workload of a web server generating HTML for a web page.
+                    Source code: in the <a href="web-ssr/">web-ssr/</a> directory.
+                </dd>
                 <dt id="WSL">WSL</dt>
                 <dd>
                     WSL is an implementation of a GPU shading language written in JavaScript.
