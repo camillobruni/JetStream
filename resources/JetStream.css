@@ -325,7 +325,7 @@ dt.non-default > *:first-child:after {
 
 dd {
     text-align: left;
-    padding: 0.5rem 0px 1.5rem 2rem;
+    padding: 0.5rem 0rem 1.5rem 2rem;
     margin: 0;
     color: var(--text-color-secondary);
 }
