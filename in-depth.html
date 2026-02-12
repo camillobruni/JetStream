@@ -27,14 +27,11 @@
 
 <head>
     <meta charset="utf-8" />
-
     <title>JetStream 3 In-Depth Analysis</title>
-
     <link rel="stylesheet" href="resources/JetStream.css">
-
 </head>
 
-<body class="overflow-scroll">
+<body class="in-depth overflow-scroll">
     <h1 class="logo">
         <div id="jetstreams">
             <a href="index.html" class="logo-image">JetStream 3</a>
@@ -143,7 +140,7 @@
 
             <p>
                 The <span style="color: var(--text-color-very-subtle);">greyed-out workloads</span> are not run by default but can be manually enabled on the command-line or via
-                the <i>testList</i> URL parameter.
+                the <code>?test=</code> URL parameter.
             </p>
 
             <dl id="workload-details">
@@ -885,8 +882,41 @@
 
             <p><a href="index.html" class="button">&larr; Return to Tests</a></p>
         </article>
-
     </main>
+
+    <script>
+        const isInBrowser = true;
+    </script>
+    <script src="utils/params.js"></script>
+    <script src="JetStreamDriver.js"></script>
+    <script>
+        (function () {
+            for (const benchmark of BENCHMARKS) {
+                let dt = document.getElementById(benchmark.name);
+                if (!dt) continue;
+
+                if (benchmark.tags.has("disabled"))
+                    dt.classList.add("non-default");
+
+                const nameLink = document.createElement("a");
+                nameLink.href = `index.html?test=${benchmark.name}`;
+                nameLink.className = "workload-link";
+                nameLink.textContent = dt.textContent;
+                dt.textContent = "";
+                dt.appendChild(nameLink);
+                                          
+                const tags = Array.from(benchmark.tags).sort();
+                for (const tag of tags) {
+                    if (tag === "all" || tag === "default") continue;
+                    const link = document.createElement("a");
+                    link.href = `index.html?tags=${tag}`;
+                    link.textContent = tag;
+                    link.className = "tag-link";
+                    dt.appendChild(link);
+                }
+            }
+        })();
+    </script>
 </body>
 
 </html>
