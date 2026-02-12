@@ -300,7 +300,7 @@ dt > a.workload-link:hover {
     background-color: var(--color-secondary);
     color: var(--text-color-secondary) !important;
     padding: 0px 4px;
-    margin-left: 3px;
+    margin-left: 6px;
     border-radius: 3px;
     font-size: 1.2rem;
     line-height: 1.8rem;
