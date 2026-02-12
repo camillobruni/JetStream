@@ -249,10 +249,9 @@
                 <dt id="babylonjs-startup-es6">babylonjs-startup-es6</dt>
                 <dd>
                     These benchmarks test the <a href="https://www.babylonjs.com/">Babylon.js</a> 3D engine.
-                    The <i>startup</i> variant measures the time it takes for the engine to initialize and parse its
-                    bundled source.
-                    The <i>scene</i> variant measures the rendering performance of a complex 3D scene with models,
-                    animations, and particles.
+                    The <i>startup</i> variant additionally measures the time it takes for the JS script to be parsed up to the game engine to initialize, parse and run a few frames of a simple scene.
+                    The <i>scene</i> variant measures the performance of a complex 3D scene with models,
+                    animations, and particles over the period of many frames.
                     The <i>es5</i> and <i>es6</i> variants use code transpiled to ES5 or native ES6, respectively.
                     Source code: in the <a href="babylonjs/">babylonjs/</a> directory.
                 </dd>
@@ -487,8 +486,8 @@
                     This benchmark tests the performance of the <a
                         href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl">Intl
                         API</a>.
-                    Since the Intl spec is not precisely defining all output formats and this workload cannot be used to
-                    compare different platforms since the output differs.
+                    Since the Intl spec is not precisely defining all output formats, this workload cannot be used to
+                    compare different platforms as the output differs.
                     Source code: in the <a href="intl/">intl/</a> directory.
                 </dd>
                 <dt id="j2cl-box2d-wasm">j2cl-box2d-wasm</dt>
