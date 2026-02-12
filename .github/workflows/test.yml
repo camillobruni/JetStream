@@ -106,7 +106,6 @@ jobs:
             - name: Run in-depth.html validation
               run: npm run test:in-depth
 
-
             - name: Run Build
               run: |
                   if ${{ github.event_name == 'pull_request' }}; then
