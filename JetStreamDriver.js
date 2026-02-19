@@ -1608,6 +1608,7 @@ class AsyncBenchmark extends DefaultBenchmark {
 
                 performance.measure(iterationMarkLabel, iterationMarkLabel);
 
+                benchmark.postIteration?.(i);
                 ${this.postIterationCode}
 
                 results.push(Math.max(1, end - start));
