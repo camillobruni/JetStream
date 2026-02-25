@@ -173,7 +173,6 @@ async function runTests() {
       process.exit(1);
 }
 
-
 async function runBrowserDriverTest(name, body) {
     return runTest(name, () => runBrowserDriver(body))
 }
@@ -256,38 +255,60 @@ async function benchmarkResults(driver) {
 
 async function inDepthPageTest(driver) {
     await driver.get(`http://localhost:${PORT}/in-depth.html`);
-    const ids = await driver.executeScript(() => {
-        return Array.from(document.querySelectorAll("#workload-details dt[id]")).map(each => each.id);
-    });
+    const descriptions = await driver.executeScript(() => {
+        return Array.from(document.querySelectorAll("#workload-details dt[id]")).map(each => {
+            return [each.id, { text: each.textContent, cssClass: each.className }];
+        });
+    }).then(entries => new Map(entries));
+
+    const sectionErrors = []
+
+    for (const [id, description] of descriptions) {
+        if (id !== description.text) {
+            sectionErrors.push(
+                `Expected dt with id '${id}' to have text content '${id}' but got '${description.text}'`);
+        }
+    }
+
+    const ids = Array.from(descriptions.keys());
     const sortedIds = ids.slice().sort((a, b) => {
         return a.toLowerCase().localeCompare(b.toLowerCase());
     });
-    const sectionErrors = []
     sortedIds.forEach((id, index) => {
         if (id !== ids[index]) {
             sectionErrors.push(
                 `Expected index ${index} to be '${id}' but got '${ids[index]}' `);
         }
     });
-    const idSet = new Set(ids);
+
     await driver.get(`http://localhost:${PORT}/index.html?tags=all`);
-    const benchmarkNames = await driver.executeScript(() => {
-        return globalThis.JetStream.benchmarks.map(each => each.name);
-    });
+    const benchmarkData = await driver.executeScript(() => {
+        return globalThis.JetStream.benchmarks.map(each => [each.name, Array.from(each.tags)]);
+    }).then(entries => new Map(entries));
+
+    const benchmarkNames = Array.from(benchmarkData.keys());
     benchmarkNames.sort((a,b) => {
         return a.toLowerCase().localeCompare(b.toLowerCase());
     });
 
-    const missingIds = benchmarkNames.filter(name => !idSet.has(name));
+    const nonDefaultIds = benchmarkNames.filter(name => !benchmarkData.get(name).includes("default"));
+    for (const id of nonDefaultIds) {
+        const description = descriptions.get(id);
+        if (description && description.cssClass !== "non-default") {
+            sectionErrors.push(`Expected non-default benchmark '${id}' to have CSS class 'non-default' but got '${description.cssClass}'`);
+        }
+    }
+
+    const missingIds = benchmarkNames.filter(name => !descriptions.has(name));
     if (missingIds.length > 0) {
         sectionErrors.push(`Missing in-depth.html info section: ${JSON.stringify(missingIds, undefined, 2)}`);
     }
 
-    const benchmarkNamesSet = new Set(benchmarkNames);
-    const unusedIds = sortedIds.filter(id => !benchmarkNamesSet.has(id)); 
+    const unusedIds = sortedIds.filter(id => !benchmarkData.has(id)); 
     if (unusedIds.length > 0) {
         sectionErrors.push(`Unused in-depth.html info section: ${JSON.stringify(unusedIds, undefined, 2)}`);
     }
+
     if (sectionErrors.length > 0) {
         throw new Error(`info section errors: ${sectionErrors.join("\n")}`);
     }
