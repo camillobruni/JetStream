@@ -86,16 +86,15 @@
         }
     }
     </script>
-
     <script src="utils/params.js"></script>
+    <script>
+        if (JetStreamParams.isDefault) {
+            document.body.classList.add("animate");
+        }
+    </script>
     <script src="JetStreamDriver.js"></script>
-
 </head>
 <body onload="initialize()" class="loading">
-<script>
-    if (JetStreamParams.isDefault)
-        document.body.classList.add("animate");
-</script>
 <h1 class="logo">
     <div id="jetstreams">
         <a href="index.html" class="logo-image">JetStream 3</a>
