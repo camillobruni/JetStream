@@ -81,6 +81,10 @@ const CLI_PARAMS = {
     help: "Custom code to run after each iteration.",
     param: "customPostIterationCode",
   },
+  "force-gc": {
+    help: "Force garbage collection before each benchmark, requires engine support.",
+    param: "forceGC",
+  },
 };
 
 const cliParams = new Map();
@@ -105,11 +109,14 @@ function parseCliFlag(argument) {
         throw Error(message);
     }
     let value = parts.slice(1).join("=");
-    if (flagName === "no-prefetch") value = "false";
+    if (flagName.startsWith("no-")) value = "false";
     else if (value === "") value = "true";
     cliParams.set(CLI_PARAMS[flagName].param, value);
 }
 
+
+const printHelp = cliParams.delete("help");
+const dumpTestList = cliParams.delete("dumpTestList");
 
 if (cliArgs.length) {
     let tests = cliParams.has("test") ? cliParams.get("tests").split(",") : []
@@ -122,12 +129,7 @@ if (cliParams.size)
 
 load("./utils/params.js");
 
-
 async function runJetStream() {
-    if (!JetStreamParams.isDefault) {
-        const paramsDiff = JetStreamParams.nonDefaultParams;
-        console.warn(`Using non standard params: ${JSON.stringify(paramsDiff, null, 2)}`)
-    }
     try {
         await JetStream.initialize();
         await JetStream.start();
@@ -169,10 +171,11 @@ function help(message=undefined) {
     }
 }
 
-if (cliParams.has("help")) {
+
+if (printHelp) {
     help();
-} else if (cliParams.has("dumpTestList")) {
-  JetStream.dumpTestList();
+} else if (dumpTestList) {
+    JetStream.dumpTestList();
 } else {
-  runJetStream();
+    runJetStream();
 }

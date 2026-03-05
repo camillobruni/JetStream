@@ -1,30 +1,33 @@
 #! /usr/bin/env node
 /* eslint-disable-next-line  no-unused-vars */
 
-// Copyright (C) 2007-2025 Apple Inc. All rights reserved.
+/*
+ * Copyright (C) 2025 Apple Inc. All rights reserved.
+ * Copyright 2025 Google LLC
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions
-// are met:
-// 1. Redistributions of source code must retain the above copyright
-//  notice, this list of conditions and the following disclaimer.
-// 2. Redistributions in binary form must reproduce the above copyright
-//  notice, this list of conditions and the following disclaimer in the
-//  documentation and/or other materials provided with the distribution.
-
-// THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS''
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS
-// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-// THE POSSIBILITY OF SUCH DAMAGE.
-
-import serve from "./server.mjs";
+import { serve, optionDefinitions as serverOptionDefinitions } from "./server.mjs";
 import { Builder, Capabilities, logging } from "selenium-webdriver";
 import { Options as ChromeOptions } from "selenium-webdriver/chrome.js";
 import { Options as FirefoxOptions } from "selenium-webdriver/firefox.js";
@@ -54,7 +57,7 @@ const TESTS = [
         name: "Run Tag No Prefetch",
         tags: ["all", "main"],
         run() {
-            return runEnd2EndTest("Run Tag No Prefetch",  { tag: "proxy", prefetchResources: "false" });
+            return runEnd2EndTest("Run Tag No Prefetch", { tag: "proxy", prefetchResources: "false" });
         }
     },
     {
@@ -70,6 +73,13 @@ const TESTS = [
         run() {
             return runEnd2EndTest("Run Default Suite");
         }
+    },
+    {
+        name: "Verify In Depth Info",
+        tags: ["all", "in-depth"],
+        run() {
+            return runBrowserDriverTest("In Depth Page Check", inDepthPageTest);
+        }
     }
 ];
 
@@ -80,8 +90,8 @@ function sleep(ms) {
 }
 
 const optionDefinitions = [
+    ...serverOptionDefinitions,
     { name: "browser", type: String, description: "Set the browser to test, choices are [safari, firefox, chrome, edge]. By default the $BROWSER env variable is used." },
-    { name: "port", type: Number, defaultValue: 8010, description: "Set the test-server port, The default value is 8010." },
     { name: "help", alias: "h", description: "Print this help text." },
     { name: "suite", type: String, defaultOption: true, typeLabel: `{underline choices}: ${VALID_TAGS.join(", ")}`, description: "Run a specific suite by name." }
 ];
@@ -142,7 +152,7 @@ process.once("uncaughtException", (err) => {
 });
 
 const PORT = options.port;
-const server = await serve(PORT);
+const server = await serve(options);
 
 async function runTests() {
     let success = true;
@@ -166,12 +176,12 @@ async function runTests() {
       process.exit(1);
 }
 
-async function runEnd2EndTest(name, params) {
-    return runTest(name, () => testEnd2End(params));
+async function runBrowserDriverTest(name, body) {
+    return runTest(name, () => runBrowserDriver(body))
 }
 
-async function testEnd2End(params) {
-    const builder =  new Builder().withCapabilities(capabilities);
+async function runBrowserDriver(body) {
+    const builder = new Builder().withCapabilities(capabilities);
     if (browserOptions) {
         switch(BROWSER) {
             case "firefox":
@@ -188,28 +198,9 @@ async function testEnd2End(params) {
     const sessionId = (await driver.getSession()).getId();
     const driverCapabilities = await driver.getCapabilities();
     logInfo(`Browser: ${driverCapabilities.getBrowserName()} ${driverCapabilities.getBrowserVersion()}`);
-    const urlParams = Object.assign({
-            worstCaseCount: 2,
-            iterationCount: 3 
-        }, params);
-    let results;
     let success = true;
     try {
-        const url = new URL(`http://localhost:${PORT}/index.html`);
-        url.search = new URLSearchParams(urlParams).toString();
-        logInfo(`JetStream PREPARE ${url}`);
-        await driver.get(url.toString());
-        await driver.executeAsyncScript((callback) => {
-            // callback() is explicitly called without the default event
-            // as argument to avoid serialization issues with chromedriver.
-            globalThis.addEventListener("JetStreamReady", () => callback());
-            // We might not get a chance to install the on-ready listener, thus
-            // we also check if the runner is ready synchronously.
-            if (globalThis?.JetStream?.isReady)
-                callback();
-        });
-        results = await benchmarkResults(driver);
-        // FIXME: validate results;
+        await body(driver);
     } catch(e) {
         success = false;
         throw e;
@@ -221,6 +212,33 @@ async function testEnd2End(params) {
             await printLogs(sessionId);
         }
     }
+}
+
+async function runEnd2EndTest(name, params) {
+    return runBrowserDriverTest(name, (driver) => testEnd2End(driver, params));
+}
+
+async function testEnd2End(driver, params) {
+    const urlParams = Object.assign({
+            worstCaseCount: 2,
+            iterationCount: 3 
+        }, params);
+    let results;
+    const url = new URL(`http://localhost:${PORT}/index.html`);
+    url.search = new URLSearchParams(urlParams).toString();
+    logInfo(`JetStream PREPARE ${url}`);
+    await driver.get(url.toString());
+    await driver.executeAsyncScript((callback) => {
+        // callback() is explicitly called without the default event
+        // as argument to avoid serialization issues with chromedriver.
+        globalThis.addEventListener("JetStreamReady", () => callback());
+        // We might not get a chance to install the on-ready listener, thus
+        // we also check if the runner is ready synchronously.
+        if (globalThis?.JetStream?.isReady)
+            callback();
+    });
+    results = await benchmarkResults(driver);
+    // FIXME: validate results;
 }
 
 async function benchmarkResults(driver) {
@@ -238,6 +256,59 @@ async function benchmarkResults(driver) {
     return JSON.parse(resultsJSON);
 }
 
+async function inDepthPageTest(driver) {
+    await driver.get(`http://localhost:${PORT}/in-depth.html`);
+    const descriptions = await driver.executeScript(() => {
+        return Array.from(document.querySelectorAll("#workload-details dt[id]")).map(each => {
+            return [each.id, { text: each.textContent, cssClass: each.className }];
+        });
+    }).then(entries => new Map(entries));
+
+    const sectionErrors = []
+
+    for (const [id, description] of descriptions) {
+        if (id !== description.text) {
+            sectionErrors.push(
+                `Expected dt with id '${id}' to have text content '${id}' but got '${description.text}'`);
+        }
+    }
+
+    const ids = Array.from(descriptions.keys());
+    const sortedIds = ids.slice().sort((a, b) => {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    });
+    sortedIds.forEach((id, index) => {
+        if (id !== ids[index]) {
+            sectionErrors.push(
+                `Expected index ${index} to be '${id}' but got '${ids[index]}' `);
+        }
+    });
+
+    await driver.get(`http://localhost:${PORT}/index.html?tags=all`);
+    const benchmarkData = await driver.executeScript(() => {
+        return globalThis.JetStream.benchmarks.map(each => [each.name, Array.from(each.tags)]);
+    }).then(entries => new Map(entries));
+
+    const benchmarkNames = Array.from(benchmarkData.keys());
+    benchmarkNames.sort((a,b) => {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    });
+
+    const missingIds = benchmarkNames.filter(name => !descriptions.has(name));
+    if (missingIds.length > 0) {
+        sectionErrors.push(`Missing in-depth.html info section: ${JSON.stringify(missingIds, undefined, 2)}`);
+    }
+
+    const unusedIds = sortedIds.filter(id => !benchmarkData.has(id)); 
+    if (unusedIds.length > 0) {
+        sectionErrors.push(`Unused in-depth.html info section: ${JSON.stringify(unusedIds, undefined, 2)}`);
+    }
+
+    if (sectionErrors.length > 0) {
+        throw new Error(`info section errors: ${sectionErrors.join("\n")}`);
+    }
+}
+
 class JetStreamTestError extends Error {
     constructor(errors) {
         super(`Tests failed: ${errors.map(e => e.stack).join(", ")}`);
@@ -248,7 +319,7 @@ class JetStreamTestError extends Error {
 const UPDATE_INTERVAL = 250;
 async function pollResultsUntilDone(driver, resolve, reject) {
     const previousResults = new Set();
-    const intervalId = setInterval(async function logResult()  {
+    const intervalId = setInterval(async function logResult() {
         const {done, errors, resultsJSON} = await driver.executeScript(() => {
             return {
                 done: globalThis.JetStream.isDone,
