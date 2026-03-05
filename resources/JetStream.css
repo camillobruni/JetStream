@@ -65,7 +65,7 @@ body {
     background-position: center -5vw;
     background-size: 100vw;
     padding-bottom: 0px;
-    background-image: url('clouds.svg');
+    background-image: url("clouds.svg");
     padding-bottom: 0px;
     overflow-y: hidden;
     height: 100%;
@@ -422,12 +422,12 @@ a.button {
 
 .loading #status-text {
     width: 100%;
-    color: transparent;
     line-height: 1.2;
     font-size: 4rem;
     font-style: italic;
     font-weight: 500;
     letter-spacing: -0.1rem;
+    color: transparent;
     -webkit-background-clip: text;
     background-repeat: no-repeat;
     -webkit-touch-callout: none;
