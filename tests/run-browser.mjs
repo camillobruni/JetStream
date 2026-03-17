@@ -54,7 +54,7 @@ const TESTS = [
         name: "Run Tag No Prefetch",
         tags: ["all", "main"],
         run() {
-            return runEnd2EndTest("Run Tag No Prefetch",  { tag: "proxy", prefetchResources: "false" });
+            return runEnd2EndTest("Run Tag No Prefetch", { tag: "proxy", prefetchResources: "false" });
         }
     },
     {
@@ -69,6 +69,13 @@ const TESTS = [
         tags: ["all", "default"],
         run() {
             return runEnd2EndTest("Run Default Suite");
+        }
+    },
+    {
+        name: "Verify In Depth Info",
+        tags: ["all", "in-depth"],
+        run() {
+            return runBrowserDriverTest("In Depth Page Check", inDepthPageTest);
         }
     }
 ];
@@ -166,12 +173,12 @@ async function runTests() {
       process.exit(1);
 }
 
-async function runEnd2EndTest(name, params) {
-    return runTest(name, () => testEnd2End(params));
+async function runBrowserDriverTest(name, body) {
+    return runTest(name, () => runBrowserDriver(body))
 }
 
-async function testEnd2End(params) {
-    const builder =  new Builder().withCapabilities(capabilities);
+async function runBrowserDriver(body) {
+    const builder = new Builder().withCapabilities(capabilities);
     if (browserOptions) {
         switch(BROWSER) {
             case "firefox":
@@ -188,28 +195,9 @@ async function testEnd2End(params) {
     const sessionId = (await driver.getSession()).getId();
     const driverCapabilities = await driver.getCapabilities();
     logInfo(`Browser: ${driverCapabilities.getBrowserName()} ${driverCapabilities.getBrowserVersion()}`);
-    const urlParams = Object.assign({
-            worstCaseCount: 2,
-            iterationCount: 3 
-        }, params);
-    let results;
     let success = true;
     try {
-        const url = new URL(`http://localhost:${PORT}/index.html`);
-        url.search = new URLSearchParams(urlParams).toString();
-        logInfo(`JetStream PREPARE ${url}`);
-        await driver.get(url.toString());
-        await driver.executeAsyncScript((callback) => {
-            // callback() is explicitly called without the default event
-            // as argument to avoid serialization issues with chromedriver.
-            globalThis.addEventListener("JetStreamReady", () => callback());
-            // We might not get a chance to install the on-ready listener, thus
-            // we also check if the runner is ready synchronously.
-            if (globalThis?.JetStream?.isReady)
-                callback();
-        });
-        results = await benchmarkResults(driver);
-        // FIXME: validate results;
+        await body(driver);
     } catch(e) {
         success = false;
         throw e;
@@ -221,6 +209,33 @@ async function testEnd2End(params) {
             await printLogs(sessionId);
         }
     }
+}
+
+async function runEnd2EndTest(name, params) {
+    return runBrowserDriverTest(name, (driver) => testEnd2End(driver, params));
+}
+
+async function testEnd2End(driver, params) {
+    const urlParams = Object.assign({
+            worstCaseCount: 2,
+            iterationCount: 3 
+        }, params);
+    let results;
+    const url = new URL(`http://localhost:${PORT}/index.html`);
+    url.search = new URLSearchParams(urlParams).toString();
+    logInfo(`JetStream PREPARE ${url}`);
+    await driver.get(url.toString());
+    await driver.executeAsyncScript((callback) => {
+        // callback() is explicitly called without the default event
+        // as argument to avoid serialization issues with chromedriver.
+        globalThis.addEventListener("JetStreamReady", () => callback());
+        // We might not get a chance to install the on-ready listener, thus
+        // we also check if the runner is ready synchronously.
+        if (globalThis?.JetStream?.isReady)
+            callback();
+    });
+    results = await benchmarkResults(driver);
+    // FIXME: validate results;
 }
 
 async function benchmarkResults(driver) {
@@ -238,6 +253,59 @@ async function benchmarkResults(driver) {
     return JSON.parse(resultsJSON);
 }
 
+async function inDepthPageTest(driver) {
+    await driver.get(`http://localhost:${PORT}/in-depth.html`);
+    const descriptions = await driver.executeScript(() => {
+        return Array.from(document.querySelectorAll("#workload-details dt[id]")).map(each => {
+            return [each.id, { text: each.textContent, cssClass: each.className }];
+        });
+    }).then(entries => new Map(entries));
+
+    const sectionErrors = []
+
+    for (const [id, description] of descriptions) {
+        if (id !== description.text) {
+            sectionErrors.push(
+                `Expected dt with id '${id}' to have text content '${id}' but got '${description.text}'`);
+        }
+    }
+
+    const ids = Array.from(descriptions.keys());
+    const sortedIds = ids.slice().sort((a, b) => {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    });
+    sortedIds.forEach((id, index) => {
+        if (id !== ids[index]) {
+            sectionErrors.push(
+                `Expected index ${index} to be '${id}' but got '${ids[index]}' `);
+        }
+    });
+
+    await driver.get(`http://localhost:${PORT}/index.html?tags=all`);
+    const benchmarkData = await driver.executeScript(() => {
+        return globalThis.JetStream.benchmarks.map(each => [each.name, Array.from(each.tags)]);
+    }).then(entries => new Map(entries));
+
+    const benchmarkNames = Array.from(benchmarkData.keys());
+    benchmarkNames.sort((a,b) => {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    });
+
+    const missingIds = benchmarkNames.filter(name => !descriptions.has(name));
+    if (missingIds.length > 0) {
+        sectionErrors.push(`Missing in-depth.html info section: ${JSON.stringify(missingIds, undefined, 2)}`);
+    }
+
+    const unusedIds = sortedIds.filter(id => !benchmarkData.has(id)); 
+    if (unusedIds.length > 0) {
+        sectionErrors.push(`Unused in-depth.html info section: ${JSON.stringify(unusedIds, undefined, 2)}`);
+    }
+
+    if (sectionErrors.length > 0) {
+        throw new Error(`info section errors: ${sectionErrors.join("\n")}`);
+    }
+}
+
 class JetStreamTestError extends Error {
     constructor(errors) {
         super(`Tests failed: ${errors.map(e => e.stack).join(", ")}`);
@@ -248,7 +316,7 @@ class JetStreamTestError extends Error {
 const UPDATE_INTERVAL = 250;
 async function pollResultsUntilDone(driver, resolve, reject) {
     const previousResults = new Set();
-    const intervalId = setInterval(async function logResult()  {
+    const intervalId = setInterval(async function logResult() {
         const {done, errors, resultsJSON} = await driver.executeScript(() => {
             return {
                 done: globalThis.JetStream.isDone,
