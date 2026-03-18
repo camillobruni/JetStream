@@ -171,7 +171,7 @@ function help(message=undefined) {
 
 if (cliParams.has("help")) {
     help();
-} else if (JetStreamParams.has("dumpTestList")) {
+} else if (JetStreamParams.dumpTestList) {
   JetStream.dumpTestList();
 } else {
   runJetStream();
