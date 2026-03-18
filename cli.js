@@ -116,7 +116,7 @@ function parseCliFlag(argument) {
 
 
 if (cliArgs.length) {
-    let tests = cliParams.has("test") ? cliParams.get("tests").split(",") : []
+    let tests = cliParams.has("test") ? cliParams.get("test").split(",") : []
     tests = tests.concat(cliArgs);
     cliParams.set("test", tests.join(","));
 }
@@ -171,7 +171,7 @@ function help(message=undefined) {
 
 if (cliParams.has("help")) {
     help();
-} else if (cliParams.has("dumpTestList")) {
+} else if (JetStreamParams.has("dumpTestList")) {
   JetStream.dumpTestList();
 } else {
   runJetStream();
