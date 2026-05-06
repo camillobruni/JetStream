@@ -344,9 +344,9 @@ class Driver {
         } else if (!JetStreamParams.dumpJSONResults)
             console.log("Starting JetStream3");
 
-        performance.mark("update-ui-start");
         const start = performance.now();
         for (const benchmark of this.benchmarks) {
+            performance.mark("update-ui-start");
             await benchmark.updateUIBeforeRun();
             await updateUI();
             performance.measure("runner update-ui", "update-ui-start");
@@ -358,14 +358,14 @@ class Driver {
                 throw e;
             }
 
-            performance.mark("update-ui");
+            performance.mark("update-ui-start");
             benchmark.updateUIAfterRun();
+            performance.measure("runner update-ui", "update-ui-start");
 
             if (isInBrowser) {
                 browserFileLoader.free(benchmark.files);
             }
         }
-        performance.measure("runner update-ui", "update-ui-start");
 
         const totalTime = performance.now() - start;
         if (measureTotalTimeAsSubtest) {
