@@ -347,7 +347,7 @@ class Driver {
         const start = performance.now();
         for (const benchmark of this.benchmarks) {
             performance.mark("update-ui-start");
-            await benchmark.updateUIBeforeRun();
+            benchmark.updateUIBeforeRun();
             await updateUI();
             performance.measure("runner update-ui", "update-ui-start");
 
