@@ -64,7 +64,10 @@
 //       preload: {                          // Fetched before the run.
 //           WORDS: "./demo-js/data/words.json",
 //       },
-//       args: { repetitions: 2000 },        // Passed to the constructor.
+//       args: {                             // Passed to the constructor.
+//           documentCount: 10,
+//           repetitions: 200,
+//       },
 //       iterations: 20,                     // Default: 120.
 //       worstCaseCount: 3,                  // Default: 4.
 //       deterministicRandom: false,         // Seeded Math.random, see 3.
@@ -135,9 +138,9 @@
 // =============================================================================
 
 
-// Expected quickHash() of the normalized text, see validate().
-// Update when changing data/words.json or `repetitions`.
-const EXPECTED_TEXT_HASH = 2018141023;
+// Expected per-iteration hash, see runIteration() and validate().
+// Update when changing data/words.json, `documentCount` or `repetitions`.
+const EXPECTED_HASH = -1457120155;
 
 
 // The harness instantiates the global `Benchmark` class. Most workloads,
@@ -148,11 +151,12 @@ const EXPECTED_TEXT_HASH = 2018141023;
 class Benchmark {
     // constructor(args): untimed. `args` from the registration plus
     // `iterationCount`. Keep it cheap; do setup in init().
-    constructor({ repetitions = 100, iterationCount }) {
+    constructor({ documentCount = 10, repetitions = 100, iterationCount }) {
+        this.documentCount = documentCount;
         this.repetitions = repetitions;
         this.iterationCount = iterationCount;
         this.words = null;
-        this.input = null;
+        this.documents = null;
         this.lastResult = null;
         this.iterationsRun = 0;
     }
@@ -168,9 +172,16 @@ class Benchmark {
     // async prepareForNextIteration(): optional, untimed, before every
     // iteration. Reset state so each iteration does the same work.
     async prepareForNextIteration() {
-        this.input = [];
-        for (let i = 0; i < this.repetitions; i++)
-            this.input.push(...this.words);
+        // Each document repeats the word list, rotated by its index.
+        this.documents = [];
+        for (let d = 0; d < this.documentCount; d++) {
+            const offset = d % this.words.length;
+            const rotated = [...this.words.slice(offset), ...this.words.slice(0, offset)];
+            const document = [];
+            for (let i = 0; i < this.repetitions; i++)
+                document.push(...rotated);
+            this.documents.push(document);
+        }
     }
 
     // async runIteration(iteration): required, timed.
@@ -178,12 +189,19 @@ class Benchmark {
     //   - Same amount of work every iteration.
     //   - "Leak" a result so the work cannot be optimized away.
     async runIteration(iteration) {
-        // DemoJS is defined by dist/bundle.js (listed before this file).
-        const text = DemoJS.normalize(this.input);
-        const sorted = DemoJS.countWords(text);
+        // Hash each intermediate text into a single value. Start fresh every
+        // iteration so the result does not depend on the iteration count.
+        let hash = 0;
+        let sorted = null;
+        for (const document of this.documents) {
+            // DemoJS is defined by dist/bundle.js (listed before this file).
+            const text = DemoJS.normalize(document);
+            sorted = DemoJS.countWords(text);
+            hash = (hash * 31 + this.quickHash(text)) | 0;
+        }
 
         // Keep the result alive to prevent dead code elimination.
-        this.lastResult = { text, sorted };
+        this.lastResult = { hash, sorted };
         this.iterationsRun++;
     }
 
@@ -194,7 +212,7 @@ class Benchmark {
         if (this.iterationsRun !== iterationCount)
             throw new Error(`Expected ${iterationCount} iterations, got ${this.iterationsRun}`);
 
-        const { text, sorted } = this.lastResult;
+        const { hash, sorted } = this.lastResult;
         if (sorted.length !== this.words.length)
             throw new Error(`Expected ${this.words.length} unique words, got ${sorted.length}`);
         for (const [word, count] of sorted) {
@@ -202,10 +220,8 @@ class Benchmark {
                 throw new Error(`Unexpected count ${count} for ${word}`);
         }
 
-        // Check large outputs against a hash instead of a checked-in copy.
-        const hash = this.quickHash(text);
-        if (hash !== EXPECTED_TEXT_HASH)
-            throw new Error(`Expected text hash ${EXPECTED_TEXT_HASH}, got ${hash}`);
+        if (hash !== EXPECTED_HASH)
+            throw new Error(`Expected hash ${EXPECTED_HASH}, got ${hash}`);
     }
 
     // Cheap sampling hash, same as StartupBenchmark.quickHash().

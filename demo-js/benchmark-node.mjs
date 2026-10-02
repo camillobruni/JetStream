@@ -40,7 +40,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PRELOAD = {
     WORDS: path.join(__dirname, "data/words.json"),
 };
-const ARGS = { repetitions: 2000 };
+const ARGS = { documentCount: 10, repetitions: 200 };
 const ITERATIONS = 20;
 
 // Minimal stand-ins for what the harness injects into the workload's global:

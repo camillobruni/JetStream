@@ -2196,7 +2196,8 @@ let BENCHMARKS = [
             WORDS: "./demo-js/data/words.json",
         },
         args: {
-            repetitions: 2000,
+            documentCount: 10,
+            repetitions: 200,
         },
         iterations: 20,
         worstCaseCount: 3,
