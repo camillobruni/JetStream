@@ -144,13 +144,7 @@ const EXPECTED_TEXT_HASH = 2018141023;
 // including this one, define it without a base class.
 //
 // Optional base class for startup / code-loading workloads:
-// utils/StartupBenchmark.js, see prismjs/ or mobx/.
-//   - Add "./utils/StartupBenchmark.js" to `files`.
-//   - Preload the bundle as BUNDLE.
-//   - Pass `expectedCacheCommentCount` (count of /*ThouShaltNotCache*/
-//     comments, inserted by utils/BabelCacheBuster.mjs).
-//   - eval() `this.iterationSourceCodes[i]`, a fresh copy per iteration.
-//   - Call `await super.init()` when overriding init().
+// utils/StartupBenchmark.js, see prismjs/benchmark.js.
 class Benchmark {
     // constructor(args): untimed. `args` from the registration plus
     // `iterationCount`. Keep it cheap; do setup in init().
