@@ -176,7 +176,7 @@ class Benchmark {
     // async runIteration(iteration): required, timed.
     //   - Aim for 10-100ms per iteration.
     //   - Same amount of work every iteration.
-    //   - Keep a result so the work cannot be optimized away.
+    //   - "Leak" a result so the work cannot be optimized away.
     //   - No I/O or timers; use `preload`.
     async runIteration(iteration) {
         // DemoJS is defined by dist/bundle.js (listed before this file).
