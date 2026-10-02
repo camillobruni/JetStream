@@ -84,9 +84,8 @@
 //       tags: ["js", "example"],            // No "default" => not run by default.
 //   }),
 //
-// Startup-focused workloads instead put the bundle into `preload` and
-// evaluate a fresh copy per iteration, see utils/StartupBenchmark.js and
-// prismjs/benchmark.js.
+// Startup-focused workloads load the bundle via `preload` instead of `files`,
+// see the StartupBenchmark note next to the `Benchmark` class below.
 //
 // Benchmark classes (pick the one matching your workload):
 //   - DefaultBenchmark: synchronous; calls runIteration() / validate() /
@@ -185,7 +184,31 @@
 // src/ and is available here through the `DemoJS` global from dist/bundle.js.
 
 
-// The harness looks up a global class named `Benchmark`.
+// The harness looks up a global class named `Benchmark`. It needs no base
+// class; most workloads, including this one, define it standalone.
+//
+// Optional base class: utils/StartupBenchmark.js (not used here).
+//   For workloads measuring startup / code-loading performance. Add
+//   "./utils/StartupBenchmark.js" to `files` before your benchmark file, put
+//   the bundle into `preload` as BUNDLE, and pass `expectedCacheCommentCount`
+//   (plus optionally `sourceCodeReuseCount`) via `args`. Its init() loads
+//   BUNDLE and creates a cache-busted copy of the source per iteration by
+//   replacing /*ThouShaltNotCache*/ comments (inserted by the build via
+//   utils/BabelCacheBuster.mjs), so each iteration must parse and compile the
+//   code from scratch. Call `await super.init()` when overriding init():
+//
+//     class Benchmark extends StartupBenchmark {
+//         constructor({ iterationCount, expectedCacheCommentCount }) {
+//             super({ iterationCount, expectedCacheCommentCount });
+//         }
+//         runIteration(iteration) {
+//             let MyBundle;  // Assigned by the evaluated bundle.
+//             eval(this.iterationSourceCodes[iteration]);
+//             this.lastResult = MyBundle.run();
+//         }
+//     }
+//
+//   See prismjs/ or mobx/ for complete examples.
 class Benchmark {
     // -------------------------------------------------------------------------
     // constructor(args)
