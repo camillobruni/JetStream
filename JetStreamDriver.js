@@ -2185,14 +2185,15 @@ let BENCHMARKS = [
         ],
         tags: ["default", "js", "Simple"],
     }),
-    // Demo: a documented template workload, see demo/benchmark.js.
+    // Demo: a documented template workload, see demo-js/benchmark.js.
     new AsyncBenchmark({
-        name: "demo",
+        name: "demo-js",
         files: [
-            "./demo/benchmark.js",
+            "./demo-js/dist/bundle.js",
+            "./demo-js/benchmark.js",
         ],
         preload: {
-            WORDS: "./demo/data/words.json",
+            WORDS: "./demo-js/data/words.json",
         },
         args: {
             repetitions: 2000,

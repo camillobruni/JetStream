@@ -1,0 +1,16 @@
+{
+  "name": "jetstream-demo-js",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Documented template workload for JetStream.",
+  "type": "module",
+  "scripts": {
+    "build": "webpack",
+    "test": "node ./benchmark-node.mjs"
+  },
+  "license": "BSD-2-Clause",
+  "devDependencies": {
+    "webpack": "^5.111.1",
+    "webpack-cli": "^7.2.3"
+  }
+}

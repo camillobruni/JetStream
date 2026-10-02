@@ -24,16 +24,38 @@
  */
 
 // =============================================================================
-// JetStream demo workload: a fully documented template for new workloads.
+// JetStream demo-js workload: a fully documented template for new workloads.
 // =============================================================================
 //
-// This file is not a meaningful benchmark. It exists to document every hook
-// and global that the JetStream harness (JetStreamDriver.js) offers to a
-// workload. Copy it as a starting point for a new workload.
+// This workload is not a meaningful benchmark. It exists to document every
+// hook and global that the JetStream harness (JetStreamDriver.js) offers to a
+// workload. Copy the demo-js/ directory as a starting point for a new one.
 //
 // Run it with:
-//   Browser: http://localhost:8010/?test=demo
-//   Shell:   d8 cli.js -- --test=demo      (or: jsc cli.js -- --test=demo)
+//   Browser: http://localhost:8010/?test=demo-js
+//   Shell:   d8 cli.js -- --test=demo-js   (or: jsc cli.js -- --test=demo-js)
+//
+// -----------------------------------------------------------------------------
+// 0. Directory layout and build step
+// -----------------------------------------------------------------------------
+//
+//   demo-js/
+//     package.json         `npm run build` / `npm test` scripts and deps.
+//     webpack.config.mjs   Bundles src/ into dist/bundle.js.
+//     src/*.mjs            Workload sources as ES modules (may use npm deps).
+//     dist/bundle.js       Checked-in build output, exposes globalThis.DemoJS.
+//     data/                Input files, loaded via `preload`.
+//     benchmark.js         Harness glue: the `Benchmark` class (this file).
+//     benchmark-node.mjs   Runs src/ directly in Node, without the harness.
+//
+// JetStream itself never runs a build: it only loads checked-in classic
+// scripts. After changing src/ or dependencies, rebuild and commit dist/:
+//
+//   cd demo-js && npm ci && npm run build
+//
+// tests/run-build.mjs (`npm run test:build`) runs `npm ci && npm run build`
+// for every package.json with a "build" script, so keep the build
+// reproducible. Keep generated code Latin-1 only, or set `allowUtf16`.
 //
 // -----------------------------------------------------------------------------
 // 1. Registration (JetStreamDriver.js)
@@ -42,10 +64,13 @@
 // Every workload is registered in the BENCHMARKS list of JetStreamDriver.js:
 //
 //   new AsyncBenchmark({
-//       name: "demo",                       // Unique name, used for --test=.
-//       files: ["./demo/benchmark.js"],     // Classic scripts, loaded in order.
+//       name: "demo-js",                    // Unique name, used for --test=.
+//       files: [                            // Classic scripts, loaded in order.
+//           "./demo-js/dist/bundle.js",     //   Build output (library code).
+//           "./demo-js/benchmark.js",       //   Harness glue.
+//       ],
 //       preload: {                          // Resources fetched upfront.
-//           WORDS: "./demo/data/words.json",
+//           WORDS: "./demo-js/data/words.json",
 //       },
 //       args: { repetitions: 2000 },        // Passed to the constructor.
 //       iterations: 20,                     // Default: 120.
@@ -55,6 +80,10 @@
 //       allowUtf16: false,                  // Sources must be Latin-1 only.
 //       tags: ["js", "example"],            // No "default" => not run by default.
 //   }),
+//
+// Startup-focused workloads instead put the bundle into `preload` and
+// evaluate a fresh copy per iteration, see utils/StartupBenchmark.js and
+// prismjs/benchmark.js.
 //
 // Benchmark classes (pick the one matching your workload):
 //   - DefaultBenchmark: synchronous; calls runIteration() / validate() /
@@ -146,16 +175,9 @@
 // =============================================================================
 
 
-// Workload-local helper. Everything at the top level of a workload file is a
-// global of the workload's fresh realm, so it does not leak to other tests.
-function shuffle(array) {
-    // Math.random is deterministic here thanks to `deterministicRandom: true`.
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
+// Top-level declarations in workload files are globals of the workload's
+// fresh realm, so they do not leak into other workloads. Library code lives in
+// src/ and is available here through the `DemoJS` global from dist/bundle.js.
 
 
 // The harness looks up a global class named `Benchmark`.
@@ -188,9 +210,9 @@ class Benchmark {
     // do their setup in the constructor instead.
     async init() {
         if (JetStream.isInBrowser)
-            console.log("demo: running in a browser");
+            console.log("demo-js: running in a browser");
         else
-            console.log(`demo: running in a shell (isD8=${JetStream.isD8})`);
+            console.log(`demo-js: running in a shell (isD8=${JetStream.isD8})`);
 
         // JetStream.preload.WORDS is a blob URL or a path; always go through
         // the JetStream loaders so it works in browsers and shells alike.
@@ -228,18 +250,13 @@ class Benchmark {
     //     in validate() (or throw right here on bad results).
     //   - Avoid I/O and timers; all resources should come from `preload`.
     async runIteration(iteration) {
-        shuffle(this.input);
+        // `DemoJS` is the global defined by dist/bundle.js, which is listed
+        // before this file in `files`. Math.random inside the bundle is
+        // deterministic thanks to `deterministicRandom: true`.
+        const shuffled = DemoJS.shuffle(this.input);
+        const sorted = DemoJS.countWords(shuffled);
 
-        const counts = new Map();
-        for (const word of this.input) {
-            const key = word.toUpperCase();
-            counts.set(key, (counts.get(key) ?? 0) + 1);
-        }
-
-        const sorted = Array.from(counts.entries()).sort(
-            (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
-
-        this.lastResult = { first: this.input[0], sorted };
+        this.lastResult = { first: shuffled[0], sorted };
         this.iterationsRun++;
     }
 
