@@ -93,10 +93,12 @@
 //   - WasmEMCCBenchmark
 //   - GroupedBenchmark
 //
-// Tags: every benchmark needs either "js" or "wasm". Benchmarks without the
-// "default" tag are automatically tagged "disabled" and only run when
-// selected explicitly (e.g. by name or tag). Tags must not collide with
-// benchmark names. Every benchmark also needs an entry in in-depth.html.
+// Tags:
+//   - Every benchmark needs "js" or "wasm".
+//   - No "default" tag => auto-tagged "disabled", only runs when selected.
+//   - Tags must not collide with benchmark names.
+//
+// Every benchmark needs an entry in in-depth.html.
 //
 // -----------------------------------------------------------------------------
 // 2. Execution model
