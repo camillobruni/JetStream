@@ -143,7 +143,7 @@ const EXPECTED_TEXT_HASH = 2018141023;
 // The harness instantiates the global `Benchmark` class. Most workloads,
 // including this one, define it without a base class.
 //
-// Optional base class for startup / code-loading workloads (not used here):
+// Optional base class for startup / code-loading workloads:
 // utils/StartupBenchmark.js, see prismjs/ or mobx/.
 //   - Add "./utils/StartupBenchmark.js" to `files`.
 //   - Preload the bundle as BUNDLE.
