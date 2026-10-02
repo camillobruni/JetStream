@@ -11,7 +11,7 @@ workload.
 npm ci
 # build the workload, output is ./dist
 npm run build
-# optional: run src/ directly in node, without the harness.
+# optional: run benchmark.js + src/ in node with a minimal JetStream shim.
 npm test
 ```
 

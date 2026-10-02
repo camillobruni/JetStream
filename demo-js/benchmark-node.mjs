@@ -23,26 +23,53 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Runs the workload sources directly in Node (`npm test`), without the
-// JetStream harness or a build step. Handy for quick iteration on src/.
+// Runs the workload in Node (`npm test`) without the full JetStream harness or
+// a build step. It drives the real `Benchmark` class from benchmark.js through
+// the same hook sequence as JetStreamDriver.js, against a minimal shim of the
+// globals the harness would provide. Handy for quick iteration on src/.
 
 import fs from "fs";
 import path from "path";
+import vm from "vm";
 import { fileURLToPath } from "url";
-import { countWords, shuffle } from "./src/index.mjs";
+import * as DemoJS from "./src/index.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const { words } = JSON.parse(fs.readFileSync(path.join(__dirname, "data/words.json"), "utf8"));
 
-const REPETITIONS = 2000;
-const input = [];
-for (let i = 0; i < REPETITIONS; i++)
-    input.push(...words);
+// Keep in sync with the demo-js entry in JetStreamDriver.js.
+const PRELOAD = {
+    WORDS: path.join(__dirname, "data/words.json"),
+};
+const ARGS = { repetitions: 2000 };
+const ITERATIONS = 20;
 
-const start = performance.now();
-const sorted = countWords(shuffle(input));
-const end = performance.now();
+// Minimal stand-ins for what the harness injects into the workload's global:
+// JetStream.preload maps names to paths, and getString reads them from disk.
+globalThis.JetStream = {
+    preload: PRELOAD,
+    getString: async (file) => fs.readFileSync(file, "utf8"),
+    getBinary: async (file) => new Int8Array(fs.readFileSync(file)),
+    isInBrowser: false,
+    isD8: false,
+};
+// Instead of loading dist/bundle.js, use the sources directly.
+globalThis.DemoJS = DemoJS;
 
-if (sorted.length !== words.length || sorted.some(([, count]) => count !== REPETITIONS))
-    throw new Error("Unexpected word counts");
-console.log(`Counted ${input.length} words in ${(end - start).toFixed(2)}ms`);
+// benchmark.js is a classic script that declares a global `Benchmark` class.
+const benchmarkSource = fs.readFileSync(path.join(__dirname, "benchmark.js"), "utf8");
+const Benchmark = vm.runInThisContext(`${benchmarkSource}\n;Benchmark`);
+
+// Same hook sequence as the AsyncBenchmark runner in JetStreamDriver.js.
+const benchmark = new Benchmark({ ...ARGS, iterationCount: ITERATIONS });
+await benchmark.init?.();
+const times = [];
+for (let i = 0; i < ITERATIONS; i++) {
+    await benchmark.prepareForNextIteration?.();
+    const start = performance.now();
+    await benchmark.runIteration(i);
+    times.push(performance.now() - start);
+}
+benchmark.validate?.(ITERATIONS);
+
+const average = times.slice(1).reduce((a, b) => a + b, 0) / (times.length - 1);
+console.log(`First: ${times[0].toFixed(2)}ms, Average: ${average.toFixed(2)}ms`);

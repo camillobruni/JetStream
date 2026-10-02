@@ -46,7 +46,7 @@
 //     dist/bundle.js       Checked-in build output, exposes globalThis.DemoJS.
 //     data/                Input files, loaded via `preload`.
 //     benchmark.js         Harness glue: the `Benchmark` class (this file).
-//     benchmark-node.mjs   Runs src/ directly in Node, without the harness.
+//     benchmark-node.mjs   Runs benchmark.js + src/ in Node with a JetStream shim.
 //
 // JetStream itself never runs a build: it only loads checked-in classic
 // scripts. After changing src/ or dependencies, rebuild and commit dist/:
