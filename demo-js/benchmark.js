@@ -79,7 +79,7 @@
 //       iterations: 20,                     // Default: 120.
 //       worstCaseCount: 3,                  // Default: 4.
 //       deterministicRandom: true,          // Seeded Math.random.
-//       exposeBrowserTest: true,            // JetStream.isInBrowser / isD8.
+//       exposeBrowserTest: false,           // JetStream.isInBrowser / isD8.
 //       allowUtf16: false,                  // Sources must be Latin-1 only.
 //       tags: ["js", "example"],            // No "default" => not run by default.
 //   }),
@@ -156,6 +156,8 @@
 //   - JetStream.getBinary(url)  -> Promise<Int8Array>   [AsyncBenchmark]
 //   - JetStream.dynamicImport(url) -> Promise<module>   [AsyncBenchmark]
 //   - JetStream.isInBrowser, JetStream.isD8             [exposeBrowserTest]
+//     Only for workloads that must behave differently per environment, e.g.
+//     worker/bomb.js (browser-only) or wasm/tfjs-benchmark.js.
 //
 // Other globals:
 //   - Math.random: seeded and reset before every iteration when
@@ -211,12 +213,10 @@ class Benchmark {
     //
     // NOTE: DefaultBenchmark never calls init(). Synchronous workloads must
     // do their setup in the constructor instead.
+    //
+    // Avoid console output: it clutters the harness results, especially in
+    // shells.
     async init() {
-        if (JetStream.isInBrowser)
-            console.log("demo-js: running in a browser");
-        else
-            console.log(`demo-js: running in a shell (isD8=${JetStream.isD8})`);
-
         // JetStream.preload.WORDS is a blob URL or a path; always go through
         // the JetStream loaders so it works in browsers and shells alike.
         const json = await JetStream.getString(JetStream.preload.WORDS);

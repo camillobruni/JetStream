@@ -2201,7 +2201,6 @@ let BENCHMARKS = [
         iterations: 20,
         worstCaseCount: 3,
         deterministicRandom: true,
-        exposeBrowserTest: true,
         tags: ["js", "example"],
     }),
     // SeaMonster

@@ -49,8 +49,6 @@ globalThis.JetStream = {
     preload: PRELOAD,
     getString: async (file) => fs.readFileSync(file, "utf8"),
     getBinary: async (file) => new Int8Array(fs.readFileSync(file)),
-    isInBrowser: false,
-    isD8: false,
 };
 // Instead of loading dist/bundle.js, use the sources directly.
 globalThis.DemoJS = DemoJS;
