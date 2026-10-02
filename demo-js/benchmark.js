@@ -74,10 +74,10 @@
 //   }),
 //
 // Benchmark classes (see JetStreamDriver.js):
-//   - DefaultBenchmark
-//   - AsyncBenchmark
-//   - WasmEMCCBenchmark
-//   - GroupedBenchmark
+//   - DefaultBenchmark:  sync hooks, no init().
+//   - AsyncBenchmark:    async hooks, init(), JetStream loaders (preferred).
+//   - WasmEMCCBenchmark: AsyncBenchmark plus emscripten `Module` setup.
+//   - GroupedBenchmark:  runs several sub-benchmarks as one entry.
 //
 // Tags:
 //   - Every benchmark needs "js" or "wasm".
