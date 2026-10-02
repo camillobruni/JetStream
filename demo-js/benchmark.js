@@ -198,6 +198,7 @@ class Benchmark {
         const text = DemoJS.normalize(this.input);
         const sorted = DemoJS.countWords(text);
 
+        // Keep the result alive to prevent dead code elimination.
         this.lastResult = { text, sorted };
         this.iterationsRun++;
     }
