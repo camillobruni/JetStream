@@ -78,7 +78,7 @@
 //       args: { repetitions: 2000 },        // Passed to the constructor.
 //       iterations: 20,                     // Default: 120.
 //       worstCaseCount: 3,                  // Default: 4.
-//       deterministicRandom: true,          // Seeded Math.random.
+//       deterministicRandom: false,         // Seeded Math.random, see 3.
 //       exposeBrowserTest: false,           // JetStream.isInBrowser / isD8.
 //       allowUtf16: false,                  // Sources must be Latin-1 only.
 //       tags: ["js", "example"],            // No "default" => not run by default.
@@ -161,6 +161,9 @@
 // Other globals:
 //   - Math.random: seeded and reset before every iteration when
 //     `deterministicRandom: true`, so every iteration sees the same sequence.
+//     This exists for third-party code that calls Math.random internally.
+//     Workload code should not use Math.random at all; use an explicit seeded
+//     PRNG instead (see createRandom() in src/word-count.mjs).
 //   - performance.now/mark/measure: always present (polyfilled in shells).
 //     Workloads may add their own marks for profiling.
 //   - console: a copy of the harness console (shells).
@@ -185,9 +188,11 @@
 
 
 // Expected quickHash() of the shuffled output in validate(). It depends on
-// data/words.json, the `repetitions` arg and the seeded Math.random, so
+// data/words.json, the `repetitions` arg and SHUFFLE_SEED, so
 // update it when changing any of those (validate() prints the actual value).
-const EXPECTED_SHUFFLE_HASH = 155010158;
+const EXPECTED_SHUFFLE_HASH = -771225532;
+// Fixed seed for the workload's own PRNG, see runIteration().
+const SHUFFLE_SEED = 0xc0ffee;
 
 
 // The harness looks up a global class named `Benchmark`. It needs no base
@@ -259,9 +264,6 @@ class Benchmark {
     // it to reset state so that each iteration does the same amount of work,
     // e.g. creating fresh input that runIteration() will consume or mutate.
     //
-    // With `deterministicRandom: true` the seed is reset right AFTER this
-    // hook, so Math.random() calls here do not affect the sequence seen by
-    // runIteration().
     async prepareForNextIteration() {
         this.input = [];
         for (let i = 0; i < this.repetitions; i++)
@@ -283,9 +285,10 @@ class Benchmark {
     //   - Avoid I/O and timers; all resources should come from `preload`.
     async runIteration(iteration) {
         // `DemoJS` is the global defined by dist/bundle.js, which is listed
-        // before this file in `files`. Math.random inside the bundle is
-        // deterministic thanks to `deterministicRandom: true`.
-        const shuffled = DemoJS.shuffle(this.input);
+        // before this file in `files`. A fresh PRNG with a fixed seed per
+        // iteration makes every iteration do identical work.
+        const random = DemoJS.createRandom(SHUFFLE_SEED);
+        const shuffled = DemoJS.shuffle(this.input, random);
         const sorted = DemoJS.countWords(shuffled);
 
         this.lastResult = { shuffled, sorted };
@@ -311,7 +314,7 @@ class Benchmark {
                 throw new Error(`Unexpected count ${count} for ${word}`);
         }
 
-        // Thanks to deterministicRandom, the shuffle result is identical in
+        // Thanks to the fixed-seed PRNG, the shuffle result is identical in
         // every iteration and on every engine, so it can be checked exactly.
         // Comparing a hash against a constant avoids checking in large
         // expected outputs.

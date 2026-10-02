@@ -25,4 +25,4 @@
 
 // Bundle entry point (see webpack.config.mjs). Everything exported here
 // becomes a property of `globalThis.DemoJS` in dist/bundle.js.
-export { countWords, shuffle } from "./word-count.mjs";
+export { countWords, createRandom, shuffle } from "./word-count.mjs";
