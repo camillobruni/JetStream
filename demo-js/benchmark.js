@@ -120,7 +120,7 @@
 // 3. Globals
 // -----------------------------------------------------------------------------
 //
-// JetStream (unknown properties throw):
+// JetStream:
 //   - preload.<NAME>:   blob URL / path per `preload` entry; load it with
 //                       getString/getBinary, never fetch().
 //   - resources[<path>]: same, keyed by original path.
