@@ -209,9 +209,8 @@ class Benchmark {
     }
 
     // Cheap sampling hash, same as StartupBenchmark.quickHash().
-    //   - Checks large outputs against a small constant instead of a
-    //     checked-in expected output.
-    //   - Fast enough to not slow down the run, even on large strings.
+    // This can be used to hash intermediate result values to "leak" them into
+    // a single result value and avoid optimizing away intermediate values.
     quickHash(str) {
         let hash = 5381;
         let i = str.length;
