@@ -2185,6 +2185,24 @@ let BENCHMARKS = [
         ],
         tags: ["default", "js", "Simple"],
     }),
+    // Demo: a documented template workload, see demo/benchmark.js.
+    new AsyncBenchmark({
+        name: "demo",
+        files: [
+            "./demo/benchmark.js",
+        ],
+        preload: {
+            WORDS: "./demo/data/words.json",
+        },
+        args: {
+            repetitions: 2000,
+        },
+        iterations: 20,
+        worstCaseCount: 3,
+        deterministicRandom: true,
+        exposeBrowserTest: true,
+        tags: ["js", "example"],
+    }),
     // SeaMonster
     new DefaultBenchmark({
         name: "ai-astar",
