@@ -177,7 +177,6 @@ class Benchmark {
     //   - Aim for 10-100ms per iteration.
     //   - Same amount of work every iteration.
     //   - "Leak" a result so the work cannot be optimized away.
-    //   - No I/O or timers; use `preload`.
     async runIteration(iteration) {
         // DemoJS is defined by dist/bundle.js (listed before this file).
         const text = DemoJS.normalize(this.input);
