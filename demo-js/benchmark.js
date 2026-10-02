@@ -98,7 +98,8 @@
 //   - No "default" tag => auto-tagged "disabled", only runs when selected.
 //   - Tags must not collide with benchmark names.
 //
-// Every benchmark needs an entry in in-depth.html.
+// Documentation:
+//   - Every benchmark needs an entry in in-depth.html.
 //
 // -----------------------------------------------------------------------------
 // 2. Execution model
