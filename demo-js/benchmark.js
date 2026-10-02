@@ -24,55 +24,44 @@
  */
 
 // =============================================================================
-// JetStream demo-js workload: a fully documented template for new workloads.
-// =============================================================================
+// demo-js: documented template workload (not a meaningful benchmark).
+// Copy demo-js/ to start a new workload.
 //
-// This workload is not a meaningful benchmark. It exists to document every
-// hook and global that the JetStream harness (JetStreamDriver.js) offers to a
-// workload. Copy the demo-js/ directory as a starting point for a new one.
-//
-// Run it with:
-//   Browser: http://localhost:8010/?test=demo-js
-//   Shell:   d8 cli.js -- --test=demo-js   (or: jsc cli.js -- --test=demo-js)
+// Run:
+//   - Browser: http://localhost:8010/?test=demo-js
+//   - Shell:   d8 cli.js -- --test=demo-js
 //
 // -----------------------------------------------------------------------------
-// 0. Directory layout and build step
+// 0. Layout and build
 // -----------------------------------------------------------------------------
 //
 //   demo-js/
-//     package.json         `npm run build` / `npm test` scripts and deps.
+//     package.json         `npm run build` / `npm test`.
 //     webpack.config.mjs   Bundles src/ into dist/bundle.js.
-//     src/*.mjs            Workload sources as ES modules (may use npm deps).
-//     dist/bundle.js       Checked-in build output, exposes globalThis.DemoJS.
-//     dist/LICENSE.txt     Generated license texts for everything in the
-//                          bundle (the bundle itself has no comments).
-//     LICENSE              License of the workload's own sources.
-//     data/                Input files, loaded via `preload`.
-//     benchmark.js         Harness glue: the `Benchmark` class (this file).
-//     benchmark-node.mjs   Runs benchmark.js + src/ in Node with a JetStream shim.
+//     src/*.mjs            Workload sources (ES modules, may use npm deps).
+//     dist/bundle.js       Checked-in build output, defines globalThis.DemoJS.
+//     dist/LICENSE.txt     Generated license texts for the bundle.
+//     LICENSE              License of the workload sources.
+//     data/                Inputs, loaded via `preload`.
+//     benchmark.js         Harness glue (this file).
+//     benchmark-node.mjs   Runs benchmark.js + src/ in Node.
 //
-// JetStream itself never runs a build: it only loads checked-in classic
-// scripts. After changing src/ or dependencies, rebuild and commit dist/:
-//
-//   cd demo-js && npm ci && npm run build
-//
-// tests/run-build.mjs (`npm run test:build`) runs `npm ci && npm run build`
-// for every package.json with a "build" script, so keep the build
-// reproducible. Keep generated code Latin-1 only, or set `allowUtf16`.
+//   - JetStream never builds; rebuild and commit dist/ after changes:
+//     `npm ci && npm run build`.
+//   - Keep the build reproducible (checked by `npm run test:build`).
+//   - Keep generated code Latin-1 only, or set `allowUtf16`.
 //
 // -----------------------------------------------------------------------------
 // 1. Registration (JetStreamDriver.js)
 // -----------------------------------------------------------------------------
 //
-// Every workload is registered in the BENCHMARKS list of JetStreamDriver.js:
-//
 //   new AsyncBenchmark({
-//       name: "demo-js",                    // Unique name, used for --test=.
-//       files: [                            // Classic scripts, loaded in order.
-//           "./demo-js/dist/bundle.js",     //   Build output (library code).
-//           "./demo-js/benchmark.js",       //   Harness glue.
+//       name: "demo-js",                    // Unique, used for --test=.
+//       files: [                            // Classic scripts, in order.
+//           "./demo-js/dist/bundle.js",
+//           "./demo-js/benchmark.js",
 //       ],
-//       preload: {                          // Resources fetched upfront.
+//       preload: {                          // Fetched before the run.
 //           WORDS: "./demo-js/data/words.json",
 //       },
 //       args: { repetitions: 2000 },        // Passed to the constructor.
@@ -80,12 +69,9 @@
 //       worstCaseCount: 3,                  // Default: 4.
 //       deterministicRandom: false,         // Seeded Math.random, see 3.
 //       exposeBrowserTest: false,           // JetStream.isInBrowser / isD8.
-//       allowUtf16: false,                  // Sources must be Latin-1 only.
-//       tags: ["js", "example"],            // No "default" => not run by default.
+//       allowUtf16: false,                  // Sources must be Latin-1.
+//       tags: ["js", "example"],
 //   }),
-//
-// Startup-focused workloads load the bundle via `preload` instead of `files`,
-// see the StartupBenchmark note next to the `Benchmark` class below.
 //
 // Benchmark classes (see JetStreamDriver.js):
 //   - DefaultBenchmark
@@ -105,127 +91,78 @@
 // 2. Execution model
 // -----------------------------------------------------------------------------
 //
-// Each workload runs in a fresh global (an iframe in browsers, a new
-// realm/global in shells). The harness concatenates, in order:
-//   a) the JetStream global and performance.mark/measure polyfills,
-//   b) optional helpers (deterministic Math.random, browser test flags,
-//      JetStream.getString & friends),
-//   c) all `files` of the benchmark,
-//   d) the runner code below, which drives the global `Benchmark` class.
+//   - Each workload runs in a fresh global (iframe / shell realm).
+//   - Load order: JetStream globals, optional helpers, `files`, runner.
+//   - Any exception in any hook fails the workload.
 //
-// Simplified AsyncBenchmark runner code:
+// Simplified AsyncBenchmark runner:
 //
 //   const benchmark = new Benchmark({ ...args, iterationCount });
-//   await benchmark.init?.();                      // Not timed.
+//   await benchmark.init?.();
 //   for (let i = 0; i < iterationCount; i++) {
-//       await benchmark.prepareForNextIteration?.(); // Not timed.
-//       Math.random.__resetSeed();                 // If deterministicRandom.
-//       <customPreIterationCode>                   // Developer param.
-//       performance.mark(`${name}-iteration-${i}`);
+//       await benchmark.prepareForNextIteration?.();
+//       Math.random.__resetSeed();               // If deterministicRandom.
+//       <customPreIterationCode>
 //       start = performance.now();
-//       await benchmark.runIteration(i);           // TIMED.
+//       await benchmark.runIteration(i);         // Only this is timed.
 //       end = performance.now();
-//       performance.measure(`${name}-iteration-${i}`, ...);
-//       <customPostIterationCode>                  // Developer param.
+//       <customPostIterationCode>
 //       results.push(Math.max(1, end - start));
 //   }
-//   benchmark.validate?.(iterationCount);          // Not timed.
+//   benchmark.validate?.(iterationCount);
 //
-// Any exception (in any hook) fails the workload and is reported as an error.
-//
-// Scoring (DefaultBenchmark / AsyncBenchmark), with score = 5000 / time_ms:
-//   - "First":   the first iteration (startup / cold performance).
-//   - "Worst":   mean of the `worstCaseCount` slowest remaining iterations
-//                (jank, GC and tier-up pauses).
-//   - "Average": mean of all remaining iterations (peak performance).
-//   The workload score is the geometric mean of these sub-scores.
+// Scoring (score = 5000 / time_ms, combined via geometric mean):
+//   - First:   first iteration.
+//   - Worst:   mean of the `worstCaseCount` slowest remaining iterations.
+//   - Average: mean of the remaining iterations.
 //
 // -----------------------------------------------------------------------------
-// 3. Globals available to the workload
+// 3. Globals
 // -----------------------------------------------------------------------------
 //
-// globalThis.JetStream (accessing unknown properties throws):
-//   - JetStream.preload.<NAME>: blob URL (browser) or file path (shell) for
-//     each `preload` entry. Pass it to the loaders below; never fetch() it
-//     directly, as shells have no fetch.
-//   - JetStream.resources[<path>]: the same blob URL/path, keyed by the
-//     original resource path. Useful when a library requests files by path.
-//   - JetStream.getString(url)  -> Promise<string>      [AsyncBenchmark]
-//   - JetStream.getBinary(url)  -> Promise<Int8Array>   [AsyncBenchmark]
-//   - JetStream.dynamicImport(url) -> Promise<module>   [AsyncBenchmark]
-//   - JetStream.isInBrowser, JetStream.isD8             [exposeBrowserTest]
-//     Only for workloads that must behave differently per environment, e.g.
-//     worker/bomb.js (browser-only) or wasm/tfjs-benchmark.js.
+// JetStream (unknown properties throw):
+//   - preload.<NAME>:   blob URL / path per `preload` entry; load it with
+//                       getString/getBinary, never fetch().
+//   - resources[<path>]: same, keyed by original path.
+//   - getString(url), getBinary(url), dynamicImport(url)   [AsyncBenchmark]
+//   - isInBrowser, isD8                                    [exposeBrowserTest]
+//     Only for environment-specific code, e.g. worker/bomb.js.
 //
-// Other globals:
-//   - Math.random: seeded and reset before every iteration when
-//     `deterministicRandom: true`, so every iteration sees the same sequence.
-//     This exists for third-party code that calls Math.random internally.
-//     Workload code should not use Math.random at all; if it needs
-//     randomness, use its own fixed-seed PRNG.
-//   - performance.now/mark/measure: always present (polyfilled in shells).
-//     Workloads may add their own marks for profiling.
-//   - console: a copy of the harness console (shells).
+// Other:
+//   - Math.random: seeded per iteration with `deterministicRandom: true`.
+//     Only for third-party code; workload code should not use Math.random.
+//   - performance.now/mark/measure: always available.
 //
 // -----------------------------------------------------------------------------
-// 4. Developer parameters that affect hooks
+// 4. Developer parameters (URL params / cli.js flags)
 // -----------------------------------------------------------------------------
 //
-// URL params (browser) or cli.js flags (shell, see `cli.js -- --help`):
-//   - iterationCount / worstCaseCount: override the defaults for all tests.
-//   - customPreIterationCode / customPostIterationCode: code injected around
-//     every runIteration() call (e.g. "gc();" for engine shells).
-//   - forceGC: call gc() before every workload.
-//   - prefetchResources=false: skip prefetching; preloads are read from the
-//     network / disk lazily (inflates timings, but eases debugging).
+//   - iterationCount, worstCaseCount: override defaults.
+//   - customPreIterationCode, customPostIterationCode: e.g. "gc();".
+//   - forceGC: gc() before each workload.
+//   - prefetchResources=false: load preloads lazily (for debugging).
 // =============================================================================
 
 
-// Top-level declarations in workload files are globals of the workload's
-// fresh realm, so they do not leak into other workloads. Library code lives in
-// src/ and is available here through the `DemoJS` global from dist/bundle.js.
-
-
-// Expected quickHash() of the normalized text in validate(). It depends on
-// data/words.json and the `repetitions` arg, so update it when changing
-// either (validate() prints the actual value).
+// Expected quickHash() of the normalized text, see validate().
+// Update when changing data/words.json or `repetitions`.
 const EXPECTED_TEXT_HASH = 2018141023;
 
 
-// The harness looks up a global class named `Benchmark`. It needs no base
-// class; most workloads, including this one, define it standalone.
+// The harness instantiates the global `Benchmark` class. Most workloads,
+// including this one, define it without a base class.
 //
-// Optional base class: utils/StartupBenchmark.js (not used here).
-//   For workloads measuring startup / code-loading performance. Add
-//   "./utils/StartupBenchmark.js" to `files` before your benchmark file, put
-//   the bundle into `preload` as BUNDLE, and pass `expectedCacheCommentCount`
-//   (plus optionally `sourceCodeReuseCount`) via `args`. Its init() loads
-//   BUNDLE and creates a cache-busted copy of the source per iteration by
-//   replacing /*ThouShaltNotCache*/ comments (inserted by the build via
-//   utils/BabelCacheBuster.mjs), so each iteration must parse and compile the
-//   code from scratch. Call `await super.init()` when overriding init():
-//
-//     class Benchmark extends StartupBenchmark {
-//         constructor({ iterationCount, expectedCacheCommentCount }) {
-//             super({ iterationCount, expectedCacheCommentCount });
-//         }
-//         runIteration(iteration) {
-//             let MyBundle;  // Assigned by the evaluated bundle.
-//             eval(this.iterationSourceCodes[iteration]);
-//             this.lastResult = MyBundle.run();
-//         }
-//     }
-//
-//   See prismjs/ or mobx/ for complete examples.
+// Optional base class for startup / code-loading workloads (not used here):
+// utils/StartupBenchmark.js, see prismjs/ or mobx/.
+//   - Add "./utils/StartupBenchmark.js" to `files`.
+//   - Preload the bundle as BUNDLE.
+//   - Pass `expectedCacheCommentCount` (count of /*ThouShaltNotCache*/
+//     comments, inserted by utils/BabelCacheBuster.mjs).
+//   - eval() `this.iterationSourceCodes[i]`, a fresh copy per iteration.
+//   - Call `await super.init()` when overriding init().
 class Benchmark {
-    // -------------------------------------------------------------------------
-    // constructor(args)
-    // -------------------------------------------------------------------------
-    // Called once, synchronously and untimed. `args` is the `args` object from
-    // the registration, plus `iterationCount` (the effective number of
-    // iterations after applying developer overrides).
-    //
-    // Keep the constructor cheap; do expensive or async setup in init().
+    // constructor(args): untimed. `args` from the registration plus
+    // `iterationCount`. Keep it cheap; do setup in init().
     constructor({ repetitions = 100, iterationCount }) {
         this.repetitions = repetitions;
         this.iterationCount = iterationCount;
@@ -235,54 +172,29 @@ class Benchmark {
         this.iterationsRun = 0;
     }
 
-    // -------------------------------------------------------------------------
-    // async init()  [optional, AsyncBenchmark only]
-    // -------------------------------------------------------------------------
-    // Called once after construction and before the first iteration. Not
-    // timed. Use it to load preloaded resources, compile Wasm modules, or
-    // build input data that should not be part of the measurement.
-    //
-    // NOTE: DefaultBenchmark never calls init(). Synchronous workloads must
-    // do their setup in the constructor instead.
-    //
-    // Avoid console output: it clutters the harness results, especially in
-    // shells.
+    // async init(): optional, untimed, called once (AsyncBenchmark only).
+    //   - Load preloads, compile Wasm, build inputs.
+    //   - Avoid console output.
     async init() {
-        // JetStream.preload.WORDS is a blob URL or a path; always go through
-        // the JetStream loaders so it works in browsers and shells alike.
         const json = await JetStream.getString(JetStream.preload.WORDS);
         this.words = JSON.parse(json).words;
     }
 
-    // -------------------------------------------------------------------------
-    // async prepareForNextIteration()  [optional]
-    // -------------------------------------------------------------------------
-    // Called before every iteration (including the first) and not timed. Use
-    // it to reset state so that each iteration does the same amount of work,
-    // e.g. creating fresh input that runIteration() will consume or mutate.
-    //
+    // async prepareForNextIteration(): optional, untimed, before every
+    // iteration. Reset state so each iteration does the same work.
     async prepareForNextIteration() {
         this.input = [];
         for (let i = 0; i < this.repetitions; i++)
             this.input.push(...this.words);
     }
 
-    // -------------------------------------------------------------------------
-    // async runIteration(iteration)  [required]
-    // -------------------------------------------------------------------------
-    // The measured unit of work, called `iterationCount` times with the
-    // zero-based iteration index. Only the time spent in this method (until
-    // the returned promise settles) contributes to the score.
-    //
-    // Guidelines:
-    //   - Aim for roughly 10-100ms per iteration on a fast machine.
-    //   - Do the same amount of work every iteration.
-    //   - Store a result so the work cannot be optimized away, and check it
-    //     in validate() (or throw right here on bad results).
-    //   - Avoid I/O and timers; all resources should come from `preload`.
+    // async runIteration(iteration): required, timed.
+    //   - Aim for 10-100ms per iteration.
+    //   - Same amount of work every iteration.
+    //   - Keep a result so the work cannot be optimized away.
+    //   - No I/O or timers; use `preload`.
     async runIteration(iteration) {
-        // `DemoJS` is the global defined by dist/bundle.js, which is listed
-        // before this file in `files`.
+        // DemoJS is defined by dist/bundle.js (listed before this file).
         const text = DemoJS.normalize(this.input);
         const sorted = DemoJS.countWords(text);
 
@@ -290,13 +202,9 @@ class Benchmark {
         this.iterationsRun++;
     }
 
-    // -------------------------------------------------------------------------
-    // validate(iterationCount)  [optional]
-    // -------------------------------------------------------------------------
-    // Called once, synchronously, after the last iteration. Not timed. Throw
-    // an Error to mark the run as failed. Use it to verify that the workload
-    // computed correct results, which guards against broken engines and
-    // against engines optimizing away the benchmarked work.
+    // validate(iterationCount): optional, untimed, after the last iteration.
+    //   - Throw to fail the run.
+    //   - Don't rely on console.assert: it only logs in browsers.
     validate(iterationCount) {
         if (this.iterationsRun !== iterationCount)
             throw new Error(`Expected ${iterationCount} iterations, got ${this.iterationsRun}`);
@@ -309,23 +217,15 @@ class Benchmark {
                 throw new Error(`Unexpected count ${count} for ${word}`);
         }
 
-        // The output is deterministic, so it can be checked exactly.
-        // Comparing a hash against a constant avoids checking in large
-        // expected outputs.
+        // Check large outputs against a hash instead of a checked-in copy.
         const hash = this.quickHash(text);
         if (hash !== EXPECTED_TEXT_HASH)
             throw new Error(`Expected text hash ${EXPECTED_TEXT_HASH}, got ${hash}`);
     }
 
-    // Cheap, sampling string hash, same as StartupBenchmark.quickHash() in
-    // utils/StartupBenchmark.js (also used by prismjs, web-ssr and
-    // jsdom-d3-startup). It only looks at every 919th character, so hashing
-    // large outputs stays cheap. It is not a full checksum: pair it with
-    // structural checks (lengths, counts) as done above.
-    //
-    // Prefer hashing in validate() (untimed). If you need per-iteration
-    // checks, hash in runIteration() and accumulate (e.g. `totalHash ^=
-    // hash`), keeping in mind that this adds to the measured time.
+    // Cheap sampling hash, same as StartupBenchmark.quickHash().
+    //   - Reads every 919th char: pair with structural checks.
+    //   - Prefer hashing in validate(); hashing in runIteration() is timed.
     quickHash(str) {
         let hash = 5381;
         let i = str.length;
