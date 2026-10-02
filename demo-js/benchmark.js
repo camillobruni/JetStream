@@ -209,8 +209,9 @@ class Benchmark {
     }
 
     // Cheap sampling hash, same as StartupBenchmark.quickHash().
-    //   - Reads every 919th char: pair with structural checks.
-    //   - Prefer hashing in validate(); hashing in runIteration() is timed.
+    //   - Checks large outputs against a small constant instead of a
+    //     checked-in expected output.
+    //   - Fast enough to not slow down the run, even on large strings.
     quickHash(str) {
         let hash = 5381;
         let i = str.length;
