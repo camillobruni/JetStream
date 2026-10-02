@@ -184,6 +184,12 @@
 // src/ and is available here through the `DemoJS` global from dist/bundle.js.
 
 
+// Expected quickHash() of the shuffled output in validate(). It depends on
+// data/words.json, the `repetitions` arg and the seeded Math.random, so
+// update it when changing any of those (validate() prints the actual value).
+const EXPECTED_SHUFFLE_HASH = 155010158;
+
+
 // The harness looks up a global class named `Benchmark`. It needs no base
 // class; most workloads, including this one, define it standalone.
 //
@@ -282,7 +288,7 @@ class Benchmark {
         const shuffled = DemoJS.shuffle(this.input);
         const sorted = DemoJS.countWords(shuffled);
 
-        this.lastResult = { first: shuffled[0], sorted };
+        this.lastResult = { shuffled, sorted };
         this.iterationsRun++;
     }
 
@@ -297,7 +303,7 @@ class Benchmark {
         if (this.iterationsRun !== iterationCount)
             throw new Error(`Expected ${iterationCount} iterations, got ${this.iterationsRun}`);
 
-        const { first, sorted } = this.lastResult;
+        const { shuffled, sorted } = this.lastResult;
         if (sorted.length !== this.words.length)
             throw new Error(`Expected ${this.words.length} unique words, got ${sorted.length}`);
         for (const [word, count] of sorted) {
@@ -307,7 +313,29 @@ class Benchmark {
 
         // Thanks to deterministicRandom, the shuffle result is identical in
         // every iteration and on every engine, so it can be checked exactly.
-        if (!this.words.includes(first))
-            throw new Error(`Unexpected first word: ${first}`);
+        // Comparing a hash against a constant avoids checking in large
+        // expected outputs.
+        const hash = this.quickHash(shuffled.join(" "));
+        if (hash !== EXPECTED_SHUFFLE_HASH)
+            throw new Error(`Expected shuffle hash ${EXPECTED_SHUFFLE_HASH}, got ${hash}`);
+    }
+
+    // Cheap, sampling string hash, same as StartupBenchmark.quickHash() in
+    // utils/StartupBenchmark.js (also used by prismjs, web-ssr and
+    // jsdom-d3-startup). It only looks at every 919th character, so hashing
+    // large outputs stays cheap. It is not a full checksum: pair it with
+    // structural checks (lengths, counts) as done above.
+    //
+    // Prefer hashing in validate() (untimed). If you need per-iteration
+    // checks, hash in runIteration() and accumulate (e.g. `totalHash ^=
+    // hash`), keeping in mind that this adds to the measured time.
+    quickHash(str) {
+        let hash = 5381;
+        let i = str.length;
+        while (i > 0) {
+            hash = (hash * 33) ^ (str.charCodeAt(i) | 0);
+            i -= 919;
+        }
+        return hash | 0;
     }
 }

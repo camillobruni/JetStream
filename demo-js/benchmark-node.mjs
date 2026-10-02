@@ -50,6 +50,22 @@ globalThis.JetStream = {
     getString: async (file) => fs.readFileSync(file, "utf8"),
     getBinary: async (file) => new Int8Array(fs.readFileSync(file)),
 };
+// Same seeded Math.random as `deterministicRandom: true` in the harness (see
+// Scripts.addDeterministicRandom in JetStreamDriver.js), so validate() sees the
+// same shuffle as in the engines.
+const INITIAL_SEED = 49734321;
+let seed = INITIAL_SEED;
+Math.random = () => {
+    seed = ((seed + 0x7ed55d16) + (seed << 12))  & 0xffff_ffff;
+    seed = ((seed ^ 0xc761c23c) ^ (seed >>> 19)) & 0xffff_ffff;
+    seed = ((seed + 0x165667b1) + (seed << 5))   & 0xffff_ffff;
+    seed = ((seed + 0xd3a2646c) ^ (seed << 9))   & 0xffff_ffff;
+    seed = ((seed + 0xfd7046c5) + (seed << 3))   & 0xffff_ffff;
+    seed = ((seed ^ 0xb55a4f09) ^ (seed >>> 16)) & 0xffff_ffff;
+    return (seed >>> 0) / 0x1_0000_0000;
+};
+const resetSeed = () => { seed = INITIAL_SEED; };
+
 // Instead of loading dist/bundle.js, use the sources directly.
 globalThis.DemoJS = DemoJS;
 
@@ -63,6 +79,7 @@ await benchmark.init?.();
 const times = [];
 for (let i = 0; i < ITERATIONS; i++) {
     await benchmark.prepareForNextIteration?.();
+    resetSeed();
     const start = performance.now();
     await benchmark.runIteration(i);
     times.push(performance.now() - start);
