@@ -132,15 +132,6 @@
 //   - Math.random: seeded per iteration with `deterministicRandom: true`.
 //     Only for third-party code; workload code should not use Math.random.
 //   - performance.now/mark/measure: always available.
-//
-// -----------------------------------------------------------------------------
-// 4. Developer parameters (URL params / cli.js flags)
-// -----------------------------------------------------------------------------
-//
-//   - iterationCount, worstCaseCount: override defaults.
-//   - customPreIterationCode, customPostIterationCode: e.g. "gc();".
-//   - forceGC: gc() before each workload.
-//   - prefetchResources=false: load preloads lazily (for debugging).
 // =============================================================================
 
 
