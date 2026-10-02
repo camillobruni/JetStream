@@ -87,15 +87,11 @@
 // Startup-focused workloads load the bundle via `preload` instead of `files`,
 // see the StartupBenchmark note next to the `Benchmark` class below.
 //
-// Benchmark classes (pick the one matching your workload):
-//   - DefaultBenchmark: synchronous; calls runIteration() / validate() /
-//     prepareForNextIteration() but NOT init().
-//   - AsyncBenchmark: like DefaultBenchmark but every hook may be async and
-//     init() is called. Also provides JetStream.getString / getBinary /
-//     dynamicImport (see section 3). Prefer this for new workloads.
-//   - WasmEMCCBenchmark: AsyncBenchmark plus an emscripten `Module` global and
-//     silenced print/abort, for emcc-compiled Wasm.
-//   - GroupedBenchmark: runs several sub-benchmarks and reports them as one.
+// Benchmark classes (see JetStreamDriver.js):
+//   - DefaultBenchmark
+//   - AsyncBenchmark
+//   - WasmEMCCBenchmark
+//   - GroupedBenchmark
 //
 // Tags: every benchmark needs either "js" or "wasm". Benchmarks without the
 // "default" tag are automatically tagged "disabled" and only run when
