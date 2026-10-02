@@ -28,38 +28,17 @@
 // directly: `npm run build` bundles them into dist/bundle.js, a classic script
 // that exposes this module's exports as `globalThis.DemoJS`.
 
-// Small seeded PRNG (mulberry32). Workloads should not depend on Math.random:
-// its output differs between engines and runs, making results impossible to
-// validate exactly. A fixed-seed generator yields the same sequence everywhere.
-export function createRandom(seed) {
-    let state = seed >>> 0;
-    return function random() {
-        state = (state + 0x6d2b79f5) >>> 0;
-        let t = state;
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 0x1_0000_0000;
-    };
+// Joins words into a single upper-case, space-separated text.
+export function normalize(words) {
+    return words.map((word) => word.toUpperCase()).join(" ");
 }
 
-// Fisher-Yates shuffle driven by an explicit `random` function, e.g. from
-// createRandom().
-export function shuffle(array, random) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-// Counts case-insensitive word occurrences and returns [word, count] pairs
-// sorted by descending count, then alphabetically.
-export function countWords(words) {
+// Counts word occurrences in a space-separated text and returns
+// [word, count] pairs sorted by descending count, then alphabetically.
+export function countWords(text) {
     const counts = new Map();
-    for (const word of words) {
-        const key = word.toUpperCase();
-        counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
+    for (const word of text.split(" "))
+        counts.set(word, (counts.get(word) ?? 0) + 1);
     return Array.from(counts.entries()).sort(
         (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
 }

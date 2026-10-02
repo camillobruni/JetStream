@@ -162,8 +162,8 @@
 //   - Math.random: seeded and reset before every iteration when
 //     `deterministicRandom: true`, so every iteration sees the same sequence.
 //     This exists for third-party code that calls Math.random internally.
-//     Workload code should not use Math.random at all; use an explicit seeded
-//     PRNG instead (see createRandom() in src/word-count.mjs).
+//     Workload code should not use Math.random at all; if it needs
+//     randomness, use its own fixed-seed PRNG.
 //   - performance.now/mark/measure: always present (polyfilled in shells).
 //     Workloads may add their own marks for profiling.
 //   - console: a copy of the harness console (shells).
@@ -187,12 +187,10 @@
 // src/ and is available here through the `DemoJS` global from dist/bundle.js.
 
 
-// Expected quickHash() of the shuffled output in validate(). It depends on
-// data/words.json, the `repetitions` arg and SHUFFLE_SEED, so
-// update it when changing any of those (validate() prints the actual value).
-const EXPECTED_SHUFFLE_HASH = -771225532;
-// Fixed seed for the workload's own PRNG, see runIteration().
-const SHUFFLE_SEED = 0xc0ffee;
+// Expected quickHash() of the normalized text in validate(). It depends on
+// data/words.json and the `repetitions` arg, so update it when changing
+// either (validate() prints the actual value).
+const EXPECTED_TEXT_HASH = 2018141023;
 
 
 // The harness looks up a global class named `Benchmark`. It needs no base
@@ -285,13 +283,11 @@ class Benchmark {
     //   - Avoid I/O and timers; all resources should come from `preload`.
     async runIteration(iteration) {
         // `DemoJS` is the global defined by dist/bundle.js, which is listed
-        // before this file in `files`. A fresh PRNG with a fixed seed per
-        // iteration makes every iteration do identical work.
-        const random = DemoJS.createRandom(SHUFFLE_SEED);
-        const shuffled = DemoJS.shuffle(this.input, random);
-        const sorted = DemoJS.countWords(shuffled);
+        // before this file in `files`.
+        const text = DemoJS.normalize(this.input);
+        const sorted = DemoJS.countWords(text);
 
-        this.lastResult = { shuffled, sorted };
+        this.lastResult = { text, sorted };
         this.iterationsRun++;
     }
 
@@ -306,7 +302,7 @@ class Benchmark {
         if (this.iterationsRun !== iterationCount)
             throw new Error(`Expected ${iterationCount} iterations, got ${this.iterationsRun}`);
 
-        const { shuffled, sorted } = this.lastResult;
+        const { text, sorted } = this.lastResult;
         if (sorted.length !== this.words.length)
             throw new Error(`Expected ${this.words.length} unique words, got ${sorted.length}`);
         for (const [word, count] of sorted) {
@@ -314,13 +310,12 @@ class Benchmark {
                 throw new Error(`Unexpected count ${count} for ${word}`);
         }
 
-        // Thanks to the fixed-seed PRNG, the shuffle result is identical in
-        // every iteration and on every engine, so it can be checked exactly.
+        // The output is deterministic, so it can be checked exactly.
         // Comparing a hash against a constant avoids checking in large
         // expected outputs.
-        const hash = this.quickHash(shuffled.join(" "));
-        if (hash !== EXPECTED_SHUFFLE_HASH)
-            throw new Error(`Expected shuffle hash ${EXPECTED_SHUFFLE_HASH}, got ${hash}`);
+        const hash = this.quickHash(text);
+        if (hash !== EXPECTED_TEXT_HASH)
+            throw new Error(`Expected text hash ${EXPECTED_TEXT_HASH}, got ${hash}`);
     }
 
     // Cheap, sampling string hash, same as StartupBenchmark.quickHash() in
