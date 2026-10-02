@@ -44,6 +44,9 @@
 //     webpack.config.mjs   Bundles src/ into dist/bundle.js.
 //     src/*.mjs            Workload sources as ES modules (may use npm deps).
 //     dist/bundle.js       Checked-in build output, exposes globalThis.DemoJS.
+//     dist/LICENSE.txt     Generated license texts for everything in the
+//                          bundle (the bundle itself has no comments).
+//     LICENSE              License of the workload's own sources.
 //     data/                Input files, loaded via `preload`.
 //     benchmark.js         Harness glue: the `Benchmark` class (this file).
 //     benchmark-node.mjs   Runs benchmark.js + src/ in Node with a JetStream shim.

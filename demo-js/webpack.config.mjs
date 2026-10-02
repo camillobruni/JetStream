@@ -28,6 +28,8 @@
 
 import path from "path";
 import { fileURLToPath } from "url";
+import TerserPlugin from "terser-webpack-plugin";
+import { LicenseWebpackPlugin } from "license-webpack-plugin";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,9 +50,35 @@ export default {
         globalObject: "globalThis",
         clean: true,
     },
+    plugins: [
+        // Like the other bundled workloads, collect all license texts into
+        // dist/LICENSE.txt instead of keeping them inline in the bundle.
+        // Third-party npm dependencies are picked up automatically; the
+        // workload's own license comes from demo-js/LICENSE.
+        new LicenseWebpackPlugin({
+            perChunkOutput: false,
+            outputFilename: "LICENSE.txt",
+            additionalModules: [
+                { name: "jetstream-demo-js", directory: __dirname },
+            ],
+        }),
+    ],
     optimization: {
-        // Keep the bundle readable (and license headers intact) for profiling.
-        // Real workloads may minify, typically shipping both variants.
-        minimize: false,
+        minimizer: [
+            new TerserPlugin({
+                extractComments: false,
+                terserOptions: {
+                    // Keep the bundle readable for profiling. Real workloads
+                    // often ship an additional minified variant.
+                    compress: false,
+                    mangle: false,
+                    format: {
+                        beautify: true,
+                        // Strip all comments, licenses live in LICENSE.txt.
+                        comments: false,
+                    },
+                },
+            }),
+        ],
     },
 };
